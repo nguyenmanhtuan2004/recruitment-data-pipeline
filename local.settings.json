@@ -1,0 +1,21 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "FUNCTIONS_WORKER_RUNTIME": "python",
+    
+    "CASSANDRA_HOST": "127.0.0.1",
+    "CASSANDRA_PORT": "9042",
+    "CASSANDRA_USER": "cassandra",
+    "CASSANDRA_PASSWORD": "cassandra",
+    "CASSANDRA_KEYSPACE": "recruitment",
+    "CASSANDRA_TABLE": "tracking",
+    
+    "MYSQL_HOST": "127.0.0.1",
+    "MYSQL_PORT": "3306",
+    "MYSQL_USER": "root",
+    "MYSQL_PASSWORD": "123",
+    "MYSQL_DATABASE": "etl_database",
+    "MYSQL_TARGET_TABLE": "events"
+  }
+}

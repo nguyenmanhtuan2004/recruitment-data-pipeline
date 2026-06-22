@@ -1,0 +1,138 @@
+version: '3.8'
+
+services:
+  # --- DATABASES ---
+  mysql:
+    image: mysql:8.0
+    container_name: etl_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: "123"
+      MYSQL_DATABASE: etl_database
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - etl_network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  cassandra:
+    image: cassandra:4.1
+    container_name: etl_cassandra
+    environment:
+      CASSANDRA_CLUSTER_NAME: "ETLCluster"
+      # Enables password authentication in Cassandra
+      CASSANDRA_AUTHENTICATOR: "PasswordAuthenticator"
+    ports:
+      - "9042:9042"
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    networks:
+      - etl_network
+    healthcheck:
+      test: ["CMD-SHELL", "nodetool status | grep -q 'UN'"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  # --- PROCESSING (Spark) ---
+  spark-master:
+    image: bitnamilegacy/spark:3.5.1
+    container_name: etl_spark_master
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+    ports:
+      - "8080:8080"
+      - "7077:7077"
+    networks:
+      - etl_network
+
+  spark-worker:
+    image: bitnamilegacy/spark:3.5.1
+    container_name: etl_spark_worker
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - SPARK_WORKER_CORES=2
+      - SPARK_WORKER_MEMORY=2g
+    ports:
+      - "8081:8081"
+    depends_on:
+      - spark-master
+    networks:
+      - etl_network
+
+  # --- VISUALIZATION ---
+  grafana:
+    image: grafana/grafana:latest
+    container_name: etl_grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - etl_network
+    depends_on:
+      mysql:
+        condition: service_healthy
+      cassandra:
+        condition: service_healthy
+
+  # --- AZURE STORAGE EMULATOR (Azurite) ---
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite
+    container_name: etl_azurite
+    ports:
+      - "10000:10000"
+      - "10001:10001"
+      - "10002:10002"
+    networks:
+      - etl_network
+
+  # --- ETL FUNCTION APP CONTAINER ---
+  etl-function-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: etl_function_app
+    depends_on:
+      mysql:
+        condition: service_healthy
+      cassandra:
+        condition: service_healthy
+      azurite:
+        condition: service_started
+    environment:
+      # Kết nối Function App tới trình giả lập Azurite local
+      - AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM0gNsT5xDz5Gs8gXibIaV55qECE59o9pa35g32X5U1534ZGW1g51Fjg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+      
+      # Các cấu hình kết nối database trỏ thẳng tới tên các container trong mạng docker
+      - CASSANDRA_HOST=cassandra
+      - CASSANDRA_PORT=9042
+      - CASSANDRA_USER=cassandra
+      - CASSANDRA_PASSWORD=cassandra
+      - CASSANDRA_KEYSPACE=recruitment
+      - CASSANDRA_TABLE=tracking
+      
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=root
+      - MYSQL_PASSWORD=123
+      - MYSQL_DATABASE=etl_database
+      - MYSQL_TARGET_TABLE=events
+    networks:
+      - etl_network
+
+networks:
+  etl_network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  cassandra_data:
+  grafana_data:
