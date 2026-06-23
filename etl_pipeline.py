@@ -53,26 +53,6 @@ def create_spark_session():
 # ==========================================
 # 3. Các hàm Transform & Aggregation
 # ==========================================
-def convert_datetime_to_uuid1(dt_str):
-    """Chuyển đổi chuỗi datetime (UTC) thành UUIDv1 nhỏ nhất tại mốc thời gian đó"""
-    import uuid
-    import datetime
-    
-    # Parse chuỗi datetime
-    dt = datetime.datetime.strptime(dt_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=datetime.timezone.utc)
-    timestamp = dt.timestamp()
-    
-    # Tính số khoảng 100-nanosecond từ ngày 15/10/1582
-    uuid_time = int(timestamp * 10000000) + 0x01b21dd213814000
-    
-    time_low = uuid_time & 0xffffffff
-    time_mid = (uuid_time >> 32) & 0xffff
-    time_hi_version = ((uuid_time >> 48) & 0x0fff) | 0x1000
-    
-    # Thiết lập clock sequence và node nhỏ nhất để đảm bảo so sánh bao trùm
-    # Variant 1 là 10xxxxxx ở nhị phân (bắt đầu bằng 0x80)
-    hex_str = f"{time_low:08x}-{time_mid:04x}-{time_hi_version:04x}-8000-000000000000"
-    return uuid.UUID(hex_str)
 
 
 def process_df(df):
@@ -192,7 +172,7 @@ def import_to_mysql(output):
     final_output = output.select(
         'job_id', 'date', 'hour', 'publisher_id', 'company_id', 
         'campaign_id', 'group_id', 'unqualified', 'qualified', 
-        'conversions', 'clicks', 'bid_set', 'spend_hour'
+        'conversions', 'clicks', 'bid_set', 'spend_hour', 'updated_at'
     )
     final_output = final_output \
         .withColumnRenamed('date', 'dates') \
@@ -237,36 +217,20 @@ def main_task(spark, mysql_time):
         .options(table=CASSANDRA_TABLE, keyspace=CASSANDRA_KEYSPACE) \
         .load()
     
-    # Chuyển đổi mysql_time thành UUIDv1 tương ứng để query Cassandra trực tiếp
-    use_pushdown = False
-    try:
-        min_uuid = convert_datetime_to_uuid1(mysql_time)
-        df = df.where(col('create_time') >= lit(str(min_uuid)))
-        use_pushdown = True
-    except Exception as e:
-        logging.warning(f"Không thể chuyển đổi mysql_time {mysql_time} thành UUIDv1. Thực hiện fallback filter trên ts. Lỗi: {str(e)}")
-        df = process_df(df)
-        df = df.where(col('ts') >= mysql_time)
-    
     # Lọc các dòng job_id isNotNull và lấy các cột cần thiết
-    if use_pushdown:
-        df = df.filter(df.job_id.isNotNull())
-        df = df.select('create_time', 'job_id', 'custom_track', 'bid', 'campaign_id', 'group_id', 'publisher_id')
-        
-        # Check if empty trước khi thực hiện UDF (để tiết kiệm tài nguyên)
-        if df.isEmpty():
-            logging.info("Không phát hiện dữ liệu mới. Bỏ qua lượt chạy này.")
-            return
-            
-        # Thêm cột 'ts' bằng cách chạy process_df
-        df = process_df(df)
-    else:
-        df = df.filter(df.job_id.isNotNull())
-        df = df.select('ts', 'job_id', 'custom_track', 'bid', 'campaign_id', 'group_id', 'publisher_id')
-        
-        if df.isEmpty():
-            logging.info("Không phát hiện dữ liệu mới. Bỏ qua lượt chạy này.")
-            return
+    df = df.filter(df.job_id.isNotNull())
+    df = df.select('create_time', 'job_id', 'custom_track', 'bid', 'campaign_id', 'group_id', 'publisher_id')
+    
+    # Thêm cột 'ts' bằng cách chạy process_df (chuyển đổi create_time sang timestamp dạng chuỗi)
+    df = process_df(df)
+    
+    # Thực hiện lọc theo mốc thời gian đã đồng bộ gần nhất trên MySQL
+    df = df.where(col('ts') >= mysql_time)
+    
+    # Check if empty trước khi thực hiện các bước tiếp theo để tiết kiệm tài nguyên
+    if df.isEmpty():
+        logging.info("Không phát hiện dữ liệu mới. Bỏ qua lượt chạy này.")
+        return
 
     # Tính toán gộp các số liệu
     cassandra_output = process_cassandra_data(spark, df)
@@ -276,6 +240,11 @@ def main_task(spark, mysql_time):
     final_output = cassandra_output.join(company, 'job_id', 'left') \
         .drop(company.group_id) \
         .drop(company.campaign_id)
+        
+    # Tìm max ts từ dữ liệu thô Cassandra để gán vào cột updated_at
+    from pyspark.sql.functions import to_timestamp
+    max_ts = df.agg({'ts': 'max'}).take(1)[0][0]
+    final_output = final_output.withColumn('updated_at', to_timestamp(lit(max_ts), 'yyyy-MM-dd HH:mm:ss'))
         
     # Ghi đè append vào MySQL
     import_to_mysql(final_output)

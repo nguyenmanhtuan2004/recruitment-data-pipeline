@@ -79,8 +79,8 @@ def generating_dummy_data(n_records, session, job_list, campaign_list, group_lis
     
     for _ in range(n_records):
         create_time = str(cassandra.util.uuid_from_time(datetime.datetime.utcnow()))
-        bid = random.choice([0.0, 0.05, 0.1, 0.2, 0.5, 1.0])  # Giá bid ngẫu nhiên
-        custom_track = random.choices(interact, weights=(70, 10, 10, 10))[0]
+        bid = random.choice([0, 1, 2, 5])  # Giá bid ngẫu nhiên dạng số nguyên để tương thích với kiểu int
+        custom_track = random.choices(interact, weights=(40, 25, 20, 15))[0]
         
         job_id = random.choice(job_list)
         publisher_id = random.choice(publisher_list)
@@ -92,10 +92,10 @@ def generating_dummy_data(n_records, session, job_list, campaign_list, group_lis
         # ts format UTC
         ts = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
         
-        # Query CQL - Không đóng dấu nháy đơn cho các trường số hoặc uuid trong Cassandra
+        # Query CQL - Đóng dấu nháy đơn cho '{create_time}' vì trường này có thể là kiểu text hoặc timeuuid
         sql = f"""
             INSERT INTO {CASSANDRA_TABLE} (create_time, bid, campaign_id, custom_track, group_id, job_id, publisher_id, ts)
-            VALUES ({create_time}, {bid}, {campaign_id}, '{custom_track}', {group_id}, {job_id}, {publisher_id}, '{ts}')
+            VALUES ('{create_time}', {bid}, {campaign_id}, '{custom_track}', {group_id}, {job_id}, {publisher_id}, '{ts}')
         """
         try:
             session.execute(sql)
@@ -138,7 +138,7 @@ def main():
     logging.info("Bắt đầu sinh dữ liệu tự động (Nhấn Ctrl+C để dừng)...")
     try:
         while True:
-            records_count = random.randint(1, 10)
+            records_count = random.randint(1, 2)
             logging.info(f"Chuẩn bị tạo {records_count} bản ghi mới...")
             generating_dummy_data(
                 n_records=records_count,
@@ -148,7 +148,7 @@ def main():
                 group_list=group_list,
                 publisher_list=publisher_list
             )
-            time.sleep(10)  # Tạo dữ liệu mỗi 10 giây để kiểm thử real-time
+            time.sleep(30)  # Tạo dữ liệu mỗi 30 giây để kiểm thử real-time (ít hơn so với 10s trước đây)
     except KeyboardInterrupt:
         logging.info("Đã dừng tiến trình sinh dữ liệu.")
     finally:

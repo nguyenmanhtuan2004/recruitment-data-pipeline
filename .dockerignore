@@ -1,0 +1,10 @@
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.git
+.github
+.gitignore
+.vscode
+*.md
+generate_dummy_data.py
