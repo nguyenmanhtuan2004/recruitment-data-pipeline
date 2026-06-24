@@ -148,7 +148,7 @@ def main():
                 group_list=group_list,
                 publisher_list=publisher_list
             )
-            time.sleep(30)  # Tạo dữ liệu mỗi 30 giây để kiểm thử real-time (ít hơn so với 10s trước đây)
+            time.sleep(30)  # Tạo dữ liệu mỗi 30 giây để kiểm thử real-time
     except KeyboardInterrupt:
         logging.info("Đã dừng tiến trình sinh dữ liệu.")
     finally:

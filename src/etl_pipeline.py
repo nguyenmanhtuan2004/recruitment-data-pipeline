@@ -257,8 +257,8 @@ def main_task(spark, mysql_time):
 # ==========================================
 # 6. Azure Function Entry Point (Timer Trigger)
 # ==========================================
-# Cấu hình cron chạy định kỳ mỗi 5 phút: "0 */5 * * * *"
-@app.schedule(schedule="0 */5 * * * *", arg_name="timer", run_on_startup=True, use_monitor=False)
+# Cấu hình cron chạy định kỳ mỗi 3 phút: "0 */3 * * * *"
+@app.schedule(schedule="0 */3 * * * *", arg_name="timer", run_on_startup=True, use_monitor=False)
 def timer_trigger_etl(timer: func.TimerRequest) -> None:
     utc_timestamp = datetime.datetime.utcnow().replace(
         tzinfo=datetime.timezone.utc).isoformat()
