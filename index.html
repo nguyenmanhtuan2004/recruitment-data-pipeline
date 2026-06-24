@@ -662,7 +662,14 @@
                     body: JSON.stringify(payload)
                 });
 
-                const result = await response.json();
+                let result = {};
+                const contentType = response.headers.get("content-type");
+                if (contentType && contentType.includes("application/json")) {
+                    result = await response.json();
+                } else {
+                    const text = await response.text();
+                    result = { status: "error", message: text || `HTTP Error ${response.status}` };
+                }
 
                 if (response.ok) {
                     statusBadge.className = 'status-badge success';

@@ -111,24 +111,24 @@ services:
         condition: service_started
     environment:
       # Kích hoạt chế độ Development để log đầy đủ thông tin ra console
-      - AZURE_FUNCTIONS_ENVIRONMENT=Development
+      AZURE_FUNCTIONS_ENVIRONMENT: Development
       # Kết nối Function App tới trình giả lập Azurite local
-      - AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+      AzureWebJobsStorage: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
       
       # Các cấu hình kết nối database trỏ thẳng tới tên các container trong mạng docker
-      - CASSANDRA_HOST=cassandra
-      - CASSANDRA_PORT=9042
-      - CASSANDRA_USER=cassandra
-      - CASSANDRA_PASSWORD=cassandra
-      - CASSANDRA_KEYSPACE=recruitment
-      - CASSANDRA_TABLE=tracking
+      CASSANDRA_HOST: cassandra
+      CASSANDRA_PORT: 9042
+      CASSANDRA_USER: cassandra
+      CASSANDRA_PASSWORD: cassandra
+      CASSANDRA_KEYSPACE: recruitment
+      CASSANDRA_TABLE: tracking
       
-      - MYSQL_HOST=mysql
-      - MYSQL_PORT=3306
-      - MYSQL_USER=root
-      - MYSQL_PASSWORD=123
-      - MYSQL_DATABASE=etl_database
-      - MYSQL_TARGET_TABLE=events
+      MYSQL_HOST: mysql
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 123
+      MYSQL_DATABASE: etl_database
+      MYSQL_TARGET_TABLE: events
     networks:
       - etl_network
 
