@@ -1,5 +1,4 @@
-*.md
-!README.md
+doc/
 
 # Python cache
 __pycache__/

@@ -2,11 +2,15 @@ import os
 import sys
 import logging
 import datetime
+import json
+import time
 from uuid import UUID
 import azure.functions as func
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col, lit, udf, coalesce, round, avg, sum, count
 from pyspark.sql.types import StringType
+from cassandra.cluster import Cluster
+from cassandra.auth import PlainTextAuthProvider
 
 # Khởi tạo Azure Function App
 app = func.FunctionApp()
@@ -281,3 +285,124 @@ def timer_trigger_etl(timer: func.TimerRequest) -> None:
         # Giải phóng Spark để giải phóng tài nguyên CPU/RAM của serverless container
         spark.stop()
         logging.info("Spark session đã dừng an toàn.")
+
+
+# ==========================================
+# 7. Giao diện Dashboard và APIs tương tác (Bất đồng bộ)
+# ==========================================
+
+# Endpoint phục vụ giao diện HTML Dashboard
+@app.route(route="ui", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def ui_dashboard(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info("Dashboard UI request received.")
+    try:
+        with open("/home/site/wwwroot/index.html", "r", encoding="utf-8") as f:
+            html_content = f.read()
+        return func.HttpResponse(body=html_content, mimetype="text/html", status_code=200)
+    except Exception as e:
+        logging.error(f"Failed to read index.html: {str(e)}")
+        return func.HttpResponse(body=f"Failed to load UI: {str(e)}", status_code=500)
+
+
+# POST API: Tiếp nhận dữ liệu -> Lưu Cassandra -> Đẩy vào Queue -> Trả về 202 Accepted lập tức
+@app.route(route="track", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
+@app.queue_output(arg_name="msg", queue_name="etl-trigger-queue", connection="AzureWebJobsStorage")
+def track_event(req: func.HttpRequest, msg: func.Out[str]) -> func.HttpResponse:
+    import datetime
+    import cassandra.util
+    
+    logging.info("API POST /api/track triggered (Asynchronous Ingestion).")
+    try:
+        # A. Đọc và phân giải Event Payload từ Request Body
+        body = req.get_json()
+        bid = int(float(body.get("bid", 0.0)))
+        campaign_id = int(body.get("campaign_id", 0))
+        custom_track = body.get("custom_track", "click")
+        group_id = body.get("group_id")
+        
+        if group_id is not None:
+            group_id = int(group_id)
+            group_id_str = str(group_id)
+        else:
+            group_id_str = "null"
+            
+        job_id = int(body.get("job_id", 0))
+        publisher_id = int(body.get("publisher_id", 0))
+        
+        # Tự động sinh ID thời gian và mốc thời gian dạng chuỗi
+        create_time = str(cassandra.util.uuid_from_time(datetime.datetime.utcnow()))
+        ts = datetime.datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        
+        # B. Kết nối và ghi nhận vào Cassandra
+        auth_provider = PlainTextAuthProvider(username=CASSANDRA_USER, password=CASSANDRA_PASSWORD)
+        cluster = Cluster([CASSANDRA_HOST], port=int(CASSANDRA_PORT), auth_provider=auth_provider)
+        session = cluster.connect(CASSANDRA_KEYSPACE)
+        
+        insert_sql = f"""
+            INSERT INTO {CASSANDRA_TABLE} (create_time, bid, campaign_id, custom_track, group_id, job_id, publisher_id, ts)
+            VALUES ('{create_time}', {bid}, {campaign_id}, '{custom_track}', {group_id_str}, {job_id}, {publisher_id}, '{ts}')
+        """
+        session.execute(insert_sql)
+        cluster.shutdown()
+        logging.info(f"Event ingested to Cassandra: {create_time}")
+        
+        # C. Đẩy tin nhắn vào Queue để kích hoạt ETL chạy ngầm
+        queue_payload = {
+            "trigger_type": "event_ingestion",
+            "timestamp": ts,
+            "latest_event_id": create_time
+        }
+        msg.set(json.dumps(queue_payload))
+        logging.info("ETL trigger message pushed to Queue.")
+        
+        # D. Trả về phản hồi lập tức cho client (HTTP 202 Accepted)
+        return func.HttpResponse(
+            body=json.dumps({
+                "status": "accepted",
+                "message": "Event recorded. ETL pipeline scheduled in background.",
+                "event": {
+                    "create_time": create_time,
+                    "ts": ts,
+                    "custom_track": custom_track,
+                    "job_id": job_id
+                }
+            }),
+            mimetype="application/json",
+            status_code=202
+        )
+        
+    except Exception as e:
+        logging.error(f"Event ingestion failed: {str(e)}")
+        return func.HttpResponse(
+            body=json.dumps({"status": "error", "message": f"Ingestion failed: {str(e)}"}),
+            mimetype="application/json",
+            status_code=400
+        )
+
+
+# Background Worker: Lắng nghe Queue -> Tự khởi chạy Spark ETL chạy ngầm dưới nền
+@app.queue_trigger(arg_name="msg", queue_name="etl-trigger-queue", connection="AzureWebJobsStorage")
+def queue_trigger_etl(msg: func.QueueMessage) -> None:
+    try:
+        payload = json.loads(msg.get_body().decode('utf-8'))
+        logging.info(f"Background ETL Triggered by Queue. Message payload: {payload}")
+    except Exception:
+        logging.info("Background ETL Triggered by Queue.")
+        
+    # Khởi tạo Spark Session cho phiên làm việc nền này
+    spark = create_spark_session()
+    try:
+        mysql_time = get_mysql_latest_time(spark)
+        logging.info(f"Background Spark ETL starting from threshold: {mysql_time}")
+        
+        import time
+        start_t = time.time()
+        main_task(spark, mysql_time)
+        duration = round(time.time() - start_t, 2)
+        
+        logging.info(f"Background Spark ETL completed successfully in {duration}s.")
+    except Exception as e:
+        logging.error(f"Background Spark ETL failed: {str(e)}")
+    finally:
+        spark.stop()
+        logging.info("Background Spark session stopped safely.")

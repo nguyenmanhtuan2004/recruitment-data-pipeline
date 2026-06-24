@@ -100,6 +100,8 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: etl_function_app
+    ports:
+      - "8082:80"
     depends_on:
       mysql:
         condition: service_healthy
@@ -108,8 +110,10 @@ services:
       azurite:
         condition: service_started
     environment:
+      # Kích hoạt chế độ Development để log đầy đủ thông tin ra console
+      - AZURE_FUNCTIONS_ENVIRONMENT=Development
       # Kết nối Function App tới trình giả lập Azurite local
-      - AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM0gNsT5xDz5Gs8gXibIaV55qECE59o9pa35g32X5U1534ZGW1g51Fjg==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
+      - AzureWebJobsStorage=DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
       
       # Các cấu hình kết nối database trỏ thẳng tới tên các container trong mạng docker
       - CASSANDRA_HOST=cassandra
