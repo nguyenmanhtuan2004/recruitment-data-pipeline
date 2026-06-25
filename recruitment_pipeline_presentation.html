@@ -12,17 +12,17 @@
   <style>
     /* CORE STYLES & VARIABLES */
     :root {
-      --bg-dark: #070a13;
-      --card-bg: rgba(15, 23, 42, 0.55);
-      --card-border: rgba(255, 255, 255, 0.08);
-      --primary: #6366f1;
-      --primary-glow: rgba(99, 102, 241, 0.4);
-      --secondary: #a855f7;
-      --secondary-glow: rgba(168, 85, 247, 0.4);
-      --accent: #22c55e;
-      --danger: #ef4444;
-      --text-main: #f3f4f6;
-      --text-muted: #9ca3af;
+      --bg-dark: #f8fafc; /* Light slate background */
+      --card-bg: rgba(255, 255, 255, 0.75);
+      --card-border: rgba(79, 70, 229, 0.08);
+      --primary: #4f46e5; /* Indigo 600 */
+      --primary-glow: rgba(79, 70, 229, 0.12);
+      --secondary: #7c3aed; /* Purple 600 */
+      --secondary-glow: rgba(124, 58, 237, 0.12);
+      --accent: #16a34a; /* Green 600 */
+      --danger: #dc2626; /* Red 600 */
+      --text-main: #0f172a; /* Slate 900 */
+      --text-muted: #475569; /* Slate 600 */
       --font-title: 'Plus Jakarta Sans', sans-serif;
       --font-body: 'Inter', sans-serif;
       --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -37,9 +37,9 @@
     body {
       background-color: var(--bg-dark);
       background-image: 
-        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 45%),
-        radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.04) 0%, transparent 50%);
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(124, 58, 237, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(22, 163, 74, 0.01) 0%, transparent 50%);
       background-attachment: fixed;
       color: var(--text-main);
       font-family: var(--font-body);
@@ -58,7 +58,7 @@
     }
 
     .gradient-text {
-      background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
     }
@@ -87,12 +87,12 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 40px;
+      padding: 24px 32px;
       border-radius: 24px;
       background: var(--card-bg);
       backdrop-filter: blur(20px);
       border: 1px solid var(--card-border);
-      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.05);
     }
 
     .slide.active {
@@ -106,9 +106,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      padding-bottom: 20px;
-      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
     }
 
     .slide-title-area {
@@ -118,9 +118,9 @@
     }
 
     .slide-badge {
-      background: rgba(99, 102, 241, 0.15);
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      color: #a5b4fc;
+      background: rgba(79, 70, 229, 0.06);
+      border: 1px solid rgba(79, 70, 229, 0.15);
+      color: #4f46e5;
       padding: 6px 14px;
       border-radius: 99px;
       font-size: 0.75rem;
@@ -153,9 +153,9 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-top: 20px;
-      padding-top: 15px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
       font-size: 0.85rem;
       color: var(--text-muted);
     }
@@ -163,13 +163,14 @@
     /* CONTROLS & NAVIGATION */
     #nav-controls {
       height: 70px;
-      background: rgba(10, 15, 30, 0.8);
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(248, 250, 252, 0.85);
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 0 40px;
       z-index: 100;
+      backdrop-filter: blur(10px);
     }
 
     .nav-btn-group {
@@ -179,8 +180,8 @@
     }
 
     .nav-btn {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
       color: var(--text-main);
       padding: 10px 20px;
       border-radius: 12px;
@@ -191,12 +192,14 @@
       align-items: center;
       gap: 8px;
       transition: var(--transition);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
     }
 
     .nav-btn:hover:not(:disabled) {
       background: var(--primary);
       border-color: var(--primary);
-      box-shadow: 0 0 15px var(--primary-glow);
+      color: #ffffff;
+      box-shadow: 0 4px 12px var(--primary-glow);
     }
 
     .nav-btn:disabled {
@@ -208,7 +211,7 @@
       flex: 1;
       max-width: 400px;
       height: 6px;
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(0, 0, 0, 0.05);
       border-radius: 99px;
       overflow: hidden;
       margin: 0 30px;
@@ -254,8 +257,8 @@
       align-items: center;
       gap: 15px;
       padding: 15px 20px;
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0, 0, 0, 0.04);
       border-radius: 16px;
       width: fit-content;
     }
@@ -288,52 +291,36 @@
       justify-content: center;
     }
 
-    /* Dynamic pulsing circle art */
+    /* Minimalist clean logo container */
     .glowing-art {
       position: relative;
-      width: 300px;
-      height: 300px;
+      width: 240px;
+      height: 240px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.04), rgba(124, 58, 237, 0.04));
+      border: 1px solid rgba(79, 70, 229, 0.08);
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 15px 35px rgba(79, 70, 229, 0.04);
     }
-
-    .glowing-circle {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      border-radius: 50%;
-      border: 1px solid rgba(99, 102, 241, 0.3);
-      animation: pulse 6s infinite ease-in-out;
-    }
-
-    .glowing-circle:nth-child(1) { width: 100%; height: 100%; animation-delay: 0s; }
-    .glowing-circle:nth-child(2) { width: 80%; height: 80%; animation-delay: 1.5s; border-color: rgba(168, 85, 247, 0.3); }
-    .glowing-circle:nth-child(3) { width: 60%; height: 60%; animation-delay: 3s; border-color: rgba(34, 197, 94, 0.3); }
 
     .glowing-core {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 80px;
-      height: 80px;
+      width: 90px;
+      height: 90px;
       background: linear-gradient(135deg, var(--primary), var(--secondary));
-      border-radius: 50%;
-      box-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
+      border-radius: 28px;
+      box-shadow: 0 12px 25px rgba(79, 70, 229, 0.25);
       display: flex;
       align-items: center;
       justify-content: center;
     }
 
-    @keyframes pulse {
-      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
-      50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.8; }
-    }
-
     /* SLIDE 2: THE SITUATION / PROBLEM */
     .problem-box {
       flex: 1;
-      background: rgba(239, 68, 68, 0.03);
-      border: 1px solid rgba(239, 68, 68, 0.15);
+      background: rgba(220, 38, 38, 0.02);
+      border: 1px solid rgba(220, 38, 38, 0.08);
       border-radius: 20px;
       padding: 30px;
       display: flex;
@@ -373,8 +360,8 @@
 
     .target-box {
       flex: 1;
-      background: rgba(34, 197, 94, 0.03);
-      border: 1px solid rgba(34, 197, 94, 0.15);
+      background: rgba(22, 163, 74, 0.02);
+      border: 1px solid rgba(22, 163, 74, 0.08);
       border-radius: 20px;
       padding: 30px;
       display: flex;
@@ -418,8 +405,8 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.01);
+      border: 1px solid rgba(0, 0, 0, 0.03);
       border-radius: 20px;
       padding: 25px;
     }
@@ -448,7 +435,7 @@
       z-index: 2;
       width: 130px;
       height: 130px;
-      background: #111827;
+      background: #ffffff;
       border: 2px solid var(--primary);
       border-radius: 50%;
       display: flex;
@@ -458,32 +445,33 @@
       text-align: center;
       font-size: 0.8rem;
       font-weight: 600;
-      box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+      color: var(--text-main);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08);
       cursor: pointer;
       transition: var(--transition);
     }
 
     .arch-node:hover {
-      transform: scale(1.1);
-      box-shadow: 0 0 30px var(--primary-glow);
+      transform: scale(1.08);
+      box-shadow: 0 15px 30px var(--primary-glow);
     }
 
     .arch-node.secondary {
       border-color: var(--secondary);
-      box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+      box-shadow: 0 10px 25px rgba(147, 51, 234, 0.08);
     }
 
     .arch-node.secondary:hover {
-      box-shadow: 0 0 30px var(--secondary-glow);
+      box-shadow: 0 15px 30px var(--secondary-glow);
     }
 
     .arch-node.accent {
       border-color: var(--accent);
-      box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+      box-shadow: 0 10px 25px rgba(22, 163, 74, 0.08);
     }
 
     .arch-node.accent:hover {
-      box-shadow: 0 0 30px rgba(34, 197, 94, 0.4);
+      box-shadow: 0 15px 30px rgba(22, 163, 74, 0.2);
     }
 
     .node-icon {
@@ -493,13 +481,14 @@
 
     .arch-desc-box {
       flex: 0.7;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.04);
       border-radius: 20px;
       padding: 25px;
       display: flex;
       flex-direction: column;
       justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
     }
 
     .arch-desc-title {
@@ -526,8 +515,8 @@
     }
 
     .schema-btn {
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.04);
       border-radius: 12px;
       padding: 15px;
       text-align: left;
@@ -536,19 +525,20 @@
       display: flex;
       align-items: center;
       gap: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
     }
 
     .schema-btn.active {
-      background: rgba(99, 102, 241, 0.1);
+      background: rgba(79, 70, 229, 0.05);
       border-color: var(--primary);
-      box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.08);
     }
 
     .schema-btn-icon {
       width: 40px;
       height: 40px;
       border-radius: 8px;
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(0, 0, 0, 0.03);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -575,12 +565,13 @@
 
     .schema-right {
       flex: 1.3;
-      background: rgba(10, 15, 30, 0.4);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.04);
       border-radius: 16px;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
     }
 
     .schema-table-wrapper {
@@ -600,23 +591,23 @@
       color: var(--text-muted);
       font-weight: 600;
       padding: 10px 15px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
       font-family: var(--font-title);
     }
 
     .schema-table td {
       padding: 12px 15px;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid rgba(0, 0, 0, 0.03);
     }
 
     .schema-table tbody tr:hover {
-      background: rgba(255, 255, 255, 0.02);
+      background: rgba(0, 0, 0, 0.01);
     }
 
     .col-name {
       font-family: monospace;
       font-weight: 600;
-      color: #a5b4fc;
+      color: var(--primary);
     }
 
     .col-type {
@@ -629,14 +620,14 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 10px;
     }
 
     .dashboard-header {
-      background: #111827;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #f1f5f9;
+      border: 1px solid rgba(0, 0, 0, 0.06);
       border-radius: 12px;
-      padding: 10px 20px;
+      padding: 6px 15px;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -659,7 +650,7 @@
     .grafana-grid {
       display: grid;
       grid-template-columns: 1fr 1.2fr;
-      gap: 15px;
+      gap: 12px;
       flex: 1;
       height: 100%;
       overflow: hidden;
@@ -668,27 +659,28 @@
     .grafana-col-left {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
     }
 
     .grafana-kpi-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 15px;
+      gap: 12px;
     }
 
     .grafana-panel {
-      background: #111827;
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
       border-radius: 12px;
-      padding: 15px;
+      padding: 10px 15px;
       display: flex;
       flex-direction: column;
       position: relative;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
     }
 
     .kpi-card-real {
-      height: 110px;
+      height: 80px;
       justify-content: center;
     }
 
@@ -701,19 +693,19 @@
     }
 
     .panel-value-real {
-      font-size: 2.2rem;
+      font-size: 1.8rem;
       font-weight: 800;
       font-family: var(--font-title);
     }
 
     .red-text {
-      color: #ef4444; /* matching pink/red in the image */
-      text-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+      color: #dc2626;
+      text-shadow: none;
     }
 
     .green-text {
-      color: #22c55e; /* matching green in the image */
-      text-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+      color: #16a34a;
+      text-shadow: none;
     }
 
     .pie-chart-panel {
@@ -730,8 +722,8 @@
     }
 
     .pie-chart-svg-wrapper {
-      width: 140px;
-      height: 140px;
+      width: 100px;
+      height: 100px;
     }
 
     .pie-svg {
@@ -743,20 +735,20 @@
     .pie-legend {
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 6px;
     }
 
     .legend-item {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       color: var(--text-main);
     }
 
     .legend-color {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 2px;
       display: inline-block;
     }
@@ -772,7 +764,7 @@
     .grafana-col-right {
       display: flex;
       flex-direction: column;
-      gap: 15px;
+      gap: 12px;
     }
 
     .bar-chart-panel {
@@ -804,8 +796,8 @@
       flex: 1;
       justify-content: space-around;
       align-items: flex-end;
-      border-left: 1px solid rgba(255,255,255,0.1);
-      border-bottom: 1px solid rgba(255,255,255,0.1);
+      border-left: 1px solid rgba(0,0,0,0.08);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
       padding-bottom: 5px;
       padding-left: 5px;
     }
@@ -826,8 +818,8 @@
 
     .bar-container-real {
       width: 100%;
-      height: 110px;
-      background: rgba(255,255,255,0.01);
+      height: 80px;
+      background: rgba(0,0,0,0.02);
       position: relative;
       border-radius: 2px;
     }
@@ -873,7 +865,7 @@
 
     .line-chart-svg {
       width: 100%;
-      height: 110px;
+      height: 80px;
     }
 
     .line-chart-x-axis {
@@ -896,8 +888,8 @@
     /* SLIDE 6: SUMMARY & OUTCOME */
     .outcome-card {
       flex: 1;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.05);
       border-radius: 20px;
       padding: 30px;
       display: flex;
@@ -906,21 +898,30 @@
       text-align: center;
       justify-content: center;
       transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
     }
 
     .outcome-card:hover {
       transform: translateY(-5px);
       border-color: var(--primary);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.06);
     }
 
-    .outcome-card.purple:hover { border-color: var(--secondary); }
-    .outcome-card.green:hover { border-color: var(--accent); }
+    .outcome-card.purple:hover { 
+      border-color: var(--secondary);
+      box-shadow: 0 10px 25px rgba(147, 51, 234, 0.06);
+    }
+    
+    .outcome-card.green:hover { 
+      border-color: var(--accent);
+      box-shadow: 0 10px 25px rgba(22, 163, 74, 0.06);
+    }
 
     .outcome-icon {
       width: 70px;
       height: 70px;
       border-radius: 20px;
-      background: rgba(99, 102, 241, 0.1);
+      background: rgba(79, 70, 229, 0.06);
       color: var(--primary);
       display: flex;
       align-items: center;
@@ -930,12 +931,12 @@
     }
 
     .outcome-card.purple .outcome-icon {
-      background: rgba(168, 85, 247, 0.1);
+      background: rgba(147, 51, 234, 0.06);
       color: var(--secondary);
     }
 
     .outcome-card.green .outcome-icon {
-      background: rgba(34, 197, 94, 0.1);
+      background: rgba(22, 163, 74, 0.06);
       color: var(--accent);
     }
 
@@ -967,7 +968,7 @@
       
       <div class="slide-content">
         <div class="welcome-left">
-          <h1 class="welcome-title">Micro-batch ETL Pipeline<br><span class="gradient-text">Recruitment Marketing</span></h1>
+          <h1 class="welcome-title">ETL Pipeline<br><span class="gradient-text">Recruitment Marketing</span></h1>
           <p class="welcome-desc">
             Xây dựng hệ thống tự động hóa xử lý và trực quan hóa dữ liệu tương tác quảng cáo tin tuyển dụng thời gian thực sử dụng PySpark, Cassandra và MySQL.
           </p>
@@ -982,9 +983,6 @@
         
         <div class="welcome-right">
           <div class="glowing-art">
-            <div class="glowing-circle"></div>
-            <div class="glowing-circle"></div>
-            <div class="glowing-circle"></div>
             <div class="glowing-core">
               <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #fff;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
             </div>
@@ -1044,44 +1042,43 @@
     <!-- SLIDE 3: PROCESS WORKFLOW -->
     <div class="slide" id="slide-3">
       <div class="slide-header">
-        <div class="slide-title-area">
-          <div class="slide-badge">A - Action (Hành động)</div>
-          <h2 class="slide-title">Kiến Trúc Micro-batch ETL 3 Bước</h2>
+        <div class="slide-title-area" style="flex-direction: column; align-items: flex-start; gap: 4px; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="slide-badge">A - Action (Hành động)</div>
+            <h2 class="slide-title">Kiến Trúc ETL 3 Bước</h2>
+          </div>
+          <div class="slide-subtitle">Triển khai trên Docker (giả lập Azure Functions & Databases) | Tự động kích hoạt mỗi 3 phút</div>
         </div>
-        <div class="slide-subtitle">Tự động kích hoạt song song mỗi 3 phút</div>
       </div>
       
-      <div class="slide-content">
-        <div class="arch-flow">
-          <div class="arch-diagram">
-            <div class="arch-node" onclick="showArchDetails('extract')">
-              <span class="node-icon">📥</span>
-              <span>1. EXTRACT</span>
-              <span style="font-size: 0.65rem; color: #a5b4fc; margin-top: 4px;">Incremental Load</span>
-            </div>
-            
-            <div class="arch-node secondary" onclick="showArchDetails('transform')">
-              <span class="node-icon">⚙️</span>
-              <span>2. TRANSFORM</span>
-              <span style="font-size: 0.65rem; color: #c084fc; margin-top: 4px;">PySpark Aggregation</span>
-            </div>
-            
-            <div class="arch-node accent" onclick="showArchDetails('load')">
-              <span class="node-icon">📤</span>
-              <span>3. LOAD</span>
-              <span style="font-size: 0.65rem; color: #86efac; margin-top: 4px;">MySQL & Grafana</span>
-            </div>
-          </div>
-          
-          <div style="font-size: 0.8rem; text-align: center; color: var(--text-muted);">
-            *Nhấp chuột vào từng nút biểu tượng ở trên để xem chi tiết nghiệp vụ xử lý*
-          </div>
+      <div class="slide-content" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <!-- Column 1: Extract -->
+        <div class="outcome-card" style="padding: 24px; justify-content: flex-start; text-align: left; align-items: flex-start;">
+          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">📥</div>
+          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--primary); margin-bottom: 4px;">1. EXTRACT</h3>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">Incremental Load</div>
+          <p class="outcome-desc" style="font-size: 0.85rem; line-height: 1.6; text-align: left; margin: 0;">
+            Điều phối bởi Azure Function (Timer Trigger). PySpark trích xuất dữ liệu gia tăng (CDC) từ Cassandra dựa trên mốc thời gian cập nhật lớn nhất (<code>updated_at</code>) trong MySQL để lọc lấy bản ghi mới phát sinh, tránh quét toàn bộ bảng.
+          </p>
         </div>
 
-        <div class="arch-desc-box" id="arch-desc-panel">
-          <h3 class="arch-desc-title" id="arch-desc-title">📥 Bước 1: Extract (Trích xuất gia tăng)</h3>
-          <p class="arch-desc-text" id="arch-desc-text">
-            Sử dụng mốc thời gian đồng bộ lớn nhất (updated_at) trong MySQL làm ngưỡng lọc. PySpark trích xuất dữ liệu từ bảng nguồn Cassandra bằng cách áp dụng TimeUUID Pushdown Filter để chỉ tải lên dữ liệu mới, tránh quét toàn bộ bảng (CDC).
+        <!-- Column 2: Transform -->
+        <div class="outcome-card purple" style="padding: 24px; justify-content: flex-start; text-align: left; align-items: flex-start;">
+          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">⚙️</div>
+          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--secondary); margin-bottom: 4px;">2. TRANSFORM</h3>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">PySpark Aggregation</div>
+          <p class="outcome-desc" style="font-size: 0.85rem; line-height: 1.6; text-align: left; margin: 0;">
+            Sử dụng PySpark làm sạch dữ liệu, phân tách tính toán song song clicks, conversions, qualified, unqualified. Sau đó, gom nhóm (Aggregation) đa chiều và Left Join với metadata của Job trong MySQL để làm giàu thông tin (Data Enrichment).
+          </p>
+        </div>
+
+        <!-- Column 3: Load -->
+        <div class="outcome-card green" style="padding: 24px; justify-content: flex-start; text-align: left; align-items: flex-start;">
+          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">📤</div>
+          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--accent); margin-bottom: 4px;">3. LOAD</h3>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">MySQL & Grafana</div>
+          <p class="outcome-desc" style="font-size: 0.85rem; line-height: 1.6; text-align: left; margin: 0;">
+            Sử dụng Spark JDBC kết nối trực tiếp đến MySQL ở chế độ append để ghi nhận dữ liệu đã được làm giàu vào bảng <code>events</code>. Grafana Dashboard sẽ truy vấn liên tục bảng MySQL này để cập nhật trực quan hóa thời gian thực.
           </p>
         </div>
       </div>
@@ -1118,22 +1115,7 @@
               <div class="schema-btn-desc">events (Aggregated Output)</div>
             </div>
           </div>
-          
-          <div class="schema-btn" onclick="switchSchema('mysql_job')">
-            <div class="schema-btn-icon">💼</div>
-            <div>
-              <div class="schema-btn-title">MySQL Metadata Table</div>
-              <div class="schema-btn-desc">job (Job Details)</div>
-            </div>
-          </div>
-          
-          <div class="schema-btn" onclick="switchSchema('mysql_publisher')">
-            <div class="schema-btn-icon">📢</div>
-            <div>
-              <div class="schema-btn-title">MySQL Publisher Table</div>
-              <div class="schema-btn-desc">master_publisher (Kênh quảng cáo)</div>
-            </div>
-          </div>
+
         </div>
 
         <div class="schema-right">
@@ -1163,178 +1145,17 @@
     <!-- SLIDE 5: INTERACTIVE DASHBOARD -->
     <div class="slide" id="slide-5">
       <div class="slide-header">
-        <div class="slide-title-area">
-          <div class="slide-badge">Trực quan hóa</div>
-          <h2 class="slide-title">Bảng Dashboard Trực Quan Hóa Thực Tế</h2>
+        <div class="slide-title-area" style="flex-direction: column; align-items: flex-start; gap: 4px; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="slide-badge">Trực quan hóa</div>
+            <h2 class="slide-title">Bảng Dashboard Trực Quan Hóa Thực Tế</h2>
+          </div>
+          <div class="slide-subtitle">Trực quan hóa thời gian thực (Near Real-time) trên Grafana</div>
         </div>
-        <div class="slide-subtitle">Trực quan hóa thời gian thực (Near Real-time) trên Grafana</div>
       </div>
       
-      <div class="slide-content">
-        <div class="dashboard-layout">
-          <!-- Mock Grafana Header -->
-          <div class="dashboard-header">
-            <div class="dashboard-logo">
-              <span class="dashboard-logo-icon">🔥</span>
-              <span>Recruitment Marketing Performance Dashboard</span>
-            </div>
-            <div style="font-size: 0.75rem; color: var(--accent); background: rgba(34, 197, 94, 0.1); padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px;">
-              <span style="width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: inline-block;"></span>
-              Live data from MySQL
-            </div>
-          </div>
-          
-          <!-- Mock Grafana Grid Layout -->
-          <div class="grafana-grid">
-            
-            <!-- Left Column: KPI Cards + Pie Chart -->
-            <div class="grafana-col-left">
-              <!-- KPI Cards Row -->
-              <div class="grafana-kpi-row">
-                <!-- Panel 1: Tổng chi phí (Spend) -->
-                <div class="grafana-panel kpi-card-real">
-                  <div class="panel-title-real">Tổng chi phí (Spend)</div>
-                  <div class="panel-value-real red-text" id="real-spend">$1.06K</div>
-                </div>
-                <!-- Panel 2: Tỷ lệ chuyển đổi -->
-                <div class="grafana-panel kpi-card-real">
-                  <div class="panel-title-real">Tỷ lệ chuyển đổi</div>
-                  <div class="panel-value-real green-text" id="real-conversion">2.01%</div>
-                </div>
-              </div>
-              
-              <!-- Panel 3: Tỉ lệ hồ sơ đạt chuẩn (Pie Chart) -->
-              <div class="grafana-panel pie-chart-panel">
-                <div class="panel-title-real">Tỉ lệ hồ sơ đạt chuẩn</div>
-                <div class="pie-chart-container">
-                  <div class="pie-chart-svg-wrapper">
-                    <!-- SVG Pie Chart -->
-                    <svg viewBox="0 0 100 100" class="pie-svg">
-                      <!-- Disqualified (Yellow) from angle 0 to 172.8 deg (48%) -->
-                      <!-- Qualified (Green) from angle 172.8 to 360 deg (52%) -->
-                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" stroke-width="20" stroke-dasharray="251.2" stroke-dashoffset="0"></circle>
-                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#d97706" stroke-width="20" stroke-dasharray="120.5 251.2" stroke-dashoffset="0" transform="rotate(-90 50 50)"></circle>
-                    </svg>
-                  </div>
-                  <div class="pie-legend">
-                    <div class="legend-item">
-                      <span class="legend-color yellow-bg"></span>
-                      <span>Không Đạt (Disqualified)</span>
-                    </div>
-                    <div class="legend-item">
-                      <span class="legend-color green-bg"></span>
-                      <span>Đạt Yêu Cầu (Qualified)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Column: Top 5 Publishers + Clicks & Conversions Line Chart -->
-            <div class="grafana-col-right">
-              <!-- Panel 4: Top 5 Nguồn Tuyển Dụng (Publishers) -->
-              <div class="grafana-panel bar-chart-panel">
-                <div class="panel-title-real">Top 5 Nguồn Tuyển Dụng (Publishers)</div>
-                <div class="bar-chart-real-container">
-                  <!-- Y-Axis labels -->
-                  <div class="chart-y-axis">
-                    <span>1200</span>
-                    <span>1000</span>
-                    <span>800</span>
-                    <span>600</span>
-                    <span>400</span>
-                    <span>200</span>
-                    <span>0</span>
-                  </div>
-                  <!-- Bars -->
-                  <div class="chart-bars-real">
-                    <div class="bar-group-real">
-                      <div class="bar-val-real">1049</div>
-                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 87%;"></div></div>
-                      <div class="bar-label-real">1</div>
-                    </div>
-                    <div class="bar-group-real">
-                      <div class="bar-val-real">6</div>
-                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 3%;"></div></div>
-                      <div class="bar-label-real">3</div>
-                    </div>
-                    <div class="bar-group-real">
-                      <div class="bar-val-real">1</div>
-                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 1.5%;"></div></div>
-                      <div class="bar-label-real">2</div>
-                    </div>
-                    <div class="bar-group-real">
-                      <div class="bar-val-real">1</div>
-                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 1.5%;"></div></div>
-                      <div class="bar-label-real">37</div>
-                    </div>
-                    <div class="bar-group-real">
-                      <div class="bar-val-real">2</div>
-                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 2%;"></div></div>
-                      <div class="bar-label-real">28</div>
-                    </div>
-                  </div>
-                </div>
-                <div class="bar-legend-real">
-                  <span class="legend-color green-bg"></span>
-                  <span>Tổng số Clicks</span>
-                </div>
-              </div>
-
-              <!-- Panel 5: Xu Hướng Clicks & Conversions -->
-              <div class="grafana-panel line-chart-panel">
-                <div class="panel-title-real">Xu Hướng Clicks & Conversions</div>
-                <div class="line-chart-real-container">
-                  <!-- Custom Line chart with SVG overlay or paths -->
-                  <svg viewBox="0 0 400 120" class="line-chart-svg">
-                    <!-- Grid Lines -->
-                    <line x1="10" y1="20" x2="390" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
-                    <line x1="10" y1="50" x2="390" y2="50" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
-                    <line x1="10" y1="80" x2="390" y2="80" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
-                    <line x1="10" y1="110" x2="390" y2="110" stroke="rgba(255,255,255,0.1)" stroke-width="1"></line>
-                    
-                    <!-- Yellow Line: Lượt Conversion (stays flat/low around y=90 (val=10) then y=110 (val=2) at x=280) -->
-                    <!-- Coordinates mapping:
-                         Times: 05:00(x=15), 05:30(x=50), 06:00(x=85), 06:30(x=120), 07:00(x=155), 07:30(x=190), 08:00(x=225), 08:30(x=260), 09:00(x=295), 09:30(x=330), 10:00(x=365)
-                         Values map to Y coordinates:
-                         0 value -> y=110.
-                         10 value -> y=90.
-                         40 value -> y=30.
-                    -->
-                    <path d="M 15,90 L 50,90 L 85,90 L 120,90 L 155,90 L 190,90 L 225,90 L 295,106" fill="transparent" stroke="#d97706" stroke-width="2"></path>
-                    <circle cx="225" cy="90" r="3" fill="#d97706"></circle>
-                    <circle cx="295" cy="106" r="3" fill="#d97706"></circle>
-
-                    <!-- Green Line: Clicks -->
-                    <path d="M 225,102 L 295,34 L 365,98" fill="transparent" stroke="#22c55e" stroke-width="2"></path>
-                    <circle cx="225" cy="102" r="3" fill="#22c55e"></circle>
-                    <circle cx="295" cy="34" r="3" fill="#22c55e"></circle>
-                    <circle cx="365" cy="98" r="3" fill="#22c55e"></circle>
-                  </svg>
-                  <div class="line-chart-x-axis">
-                    <span>05:00</span>
-                    <span>06:00</span>
-                    <span>07:00</span>
-                    <span>08:00</span>
-                    <span>09:00</span>
-                    <span>10:00</span>
-                  </div>
-                </div>
-                <div class="line-legend-real">
-                  <div class="legend-item">
-                    <span class="legend-color green-bg"></span>
-                    <span>Lượt Clicks</span>
-                  </div>
-                  <div class="legend-item">
-                    <span class="legend-color yellow-bg"></span>
-                    <span>Lượt Conversion</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-          </div>
-        </div>
+      <div class="slide-content" style="display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.05); box-shadow: 0 10px 30px rgba(99, 102, 241, 0.03); background: #ffffff; padding: 10px; height: 100%;">
+        <img src="doc/grafana_dashboard.png" alt="Grafana Dashboard" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px;" />
       </div>
       
       <div class="slide-footer">
@@ -1426,22 +1247,6 @@
         { name: "publisher_id", type: "INT", desc: "Mã nguồn tuyển dụng" },
         { name: "campaign_id", type: "INT", desc: "Mã chiến dịch quảng cáo" },
         { name: "updated_at", type: "TIMESTAMP", desc: "Mốc thời gian đồng bộ cuối cùng của loạt dữ liệu" }
-      ],
-      mysql_job: [
-        { name: "id", type: "INT (Primary Key)", desc: "Mã định danh tin tuyển dụng" },
-        { name: "title", type: "VARCHAR(255)", desc: "Tiêu đề tin tuyển dụng (ví dụ: 'Java Developer')" },
-        { name: "description", type: "TEXT", desc: "Nội dung mô tả công việc chi tiết" },
-        { name: "budget", type: "DECIMAL(10,2)", desc: "Tổng ngân sách tối đa được phân bổ cho tin" },
-        { name: "company_id", type: "INT", desc: "Mã công ty sở hữu tin tuyển dụng" },
-        { name: "campaign_id", type: "INT", desc: "Mã chiến dịch quảng cáo đang chạy" },
-        { name: "is_active", type: "TINYINT", desc: "Trạng thái tin tuyển dụng (1: Hoạt động, 0: Đóng)" }
-      ],
-      mysql_publisher: [
-        { name: "id", type: "INT (Primary Key)", desc: "Mã định danh nguồn quảng cáo" },
-        { name: "publisher_name", type: "VARCHAR(255)", desc: "Tên thương hiệu đối tác (ví dụ: 'Facebook Ads')" },
-        { name: "publisher_email", type: "VARCHAR(255)", desc: "Email liên lạc đối tác" },
-        { name: "min_bid / max_bid", type: "DECIMAL(10,2)", desc: "Giới hạn giá thầu thiết lập cho kênh" },
-        { name: "countries", type: "VARCHAR(255)", desc: "Các quốc gia áp dụng kênh này" }
       ]
     };
 
@@ -1524,6 +1329,8 @@
       const panelText = document.getElementById("arch-desc-text");
       const panel = document.getElementById("arch-desc-panel");
       
+      if (!panelTitle || !panelText || !panel) return;
+      
       // Flash fade animation
       panel.style.opacity = 0;
       setTimeout(() => {
@@ -1573,6 +1380,8 @@
       const spendVal = document.getElementById("real-spend");
       const convRateVal = document.getElementById("real-conversion");
       
+      if (!spendVal || !convRateVal) return;
+      
       let baseSpend = 1060.00;
       let baseConvRate = 2.01;
 
@@ -1616,8 +1425,10 @@
     // Initialize Schema View & Controller setup on load
     window.addEventListener("DOMContentLoaded", () => {
       switchSchema("cassandra");
-      // Pre-warm details panel
-      showArchDetails("extract");
+      // Pre-warm details panel if it exists
+      if (document.getElementById("arch-desc-panel")) {
+        showArchDetails("extract");
+      }
     });
   </script>
 </body>

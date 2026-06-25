@@ -4,3 +4,6 @@ doc/
 __pycache__/
 *.pyc
 
+# Đảm bảo không bị ignore
+!TECHNICAL_DETAILS.md
+
