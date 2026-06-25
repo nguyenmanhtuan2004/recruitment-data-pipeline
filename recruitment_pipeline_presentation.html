@@ -1,0 +1,1624 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruitment ETL Pipeline Presentation Slide</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CORE STYLES & VARIABLES */
+    :root {
+      --bg-dark: #070a13;
+      --card-bg: rgba(15, 23, 42, 0.55);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --primary: #6366f1;
+      --primary-glow: rgba(99, 102, 241, 0.4);
+      --secondary: #a855f7;
+      --secondary-glow: rgba(168, 85, 247, 0.4);
+      --accent: #22c55e;
+      --danger: #ef4444;
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --font-title: 'Plus Jakarta Sans', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 90% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 45%),
+        radial-gradient(circle at 50% 50%, rgba(34, 197, 94, 0.04) 0%, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
+
+    /* TYPOGRAPHY */
+    h1, h2, h3, h4 {
+      font-family: var(--font-title);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .gradient-text {
+      background: linear-gradient(135deg, #818cf8 0%, #c084fc 50%, #f472b6 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* PRESENTATION FRAMEWORK */
+    #deck-container {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .slide {
+      position: absolute;
+      width: 90%;
+      max-width: 1300px;
+      height: 80%;
+      max-height: 750px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px) scale(0.98);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 40px;
+      border-radius: 24px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
+
+    /* SLIDE COMPONENTS */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      padding-bottom: 20px;
+      margin-bottom: 20px;
+    }
+
+    .slide-title-area {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .slide-badge {
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      color: #a5b4fc;
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .slide-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+    }
+
+    .slide-subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-top: 4px;
+    }
+
+    .slide-content {
+      flex: 1;
+      display: flex;
+      gap: 30px;
+      align-items: stretch;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 20px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    /* CONTROLS & NAVIGATION */
+    #nav-controls {
+      height: 70px;
+      background: rgba(10, 15, 30, 0.8);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      z-index: 100;
+    }
+
+    .nav-btn-group {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+
+    .nav-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--text-main);
+      padding: 10px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-title);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: var(--primary);
+      border-color: var(--primary);
+      box-shadow: 0 0 15px var(--primary-glow);
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    #progress-container {
+      flex: 1;
+      max-width: 400px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 0 30px;
+    }
+
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transition: var(--transition);
+    }
+
+    #slide-indicator {
+      font-family: var(--font-title);
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    /* SLIDE 1: WELCOME SLIDE */
+    .welcome-left {
+      flex: 1.2;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .welcome-title {
+      font-size: 3.5rem;
+      line-height: 1.15;
+      font-weight: 800;
+      margin-bottom: 20px;
+    }
+
+    .welcome-desc {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+
+    .profile-card {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 20px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      width: fit-content;
+    }
+
+    .avatar-icon {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .profile-info h4 {
+      font-size: 0.95rem;
+    }
+
+    .profile-info p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .welcome-right {
+      flex: 0.8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Dynamic pulsing circle art */
+    .glowing-art {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
+
+    .glowing-circle {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      border-radius: 50%;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      animation: pulse 6s infinite ease-in-out;
+    }
+
+    .glowing-circle:nth-child(1) { width: 100%; height: 100%; animation-delay: 0s; }
+    .glowing-circle:nth-child(2) { width: 80%; height: 80%; animation-delay: 1.5s; border-color: rgba(168, 85, 247, 0.3); }
+    .glowing-circle:nth-child(3) { width: 60%; height: 60%; animation-delay: 3s; border-color: rgba(34, 197, 94, 0.3); }
+
+    .glowing-core {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 50%;
+      box-shadow: 0 0 40px rgba(99, 102, 241, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    @keyframes pulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+      50% { transform: translate(-50%, -50%) scale(1.08); opacity: 0.8; }
+    }
+
+    /* SLIDE 2: THE SITUATION / PROBLEM */
+    .problem-box {
+      flex: 1;
+      background: rgba(239, 68, 68, 0.03);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .problem-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--danger);
+      margin-bottom: 20px;
+    }
+
+    .problem-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .problem-points li {
+      position: relative;
+      padding-left: 28px;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .problem-points li::before {
+      content: "✕";
+      position: absolute;
+      left: 0;
+      color: var(--danger);
+      font-weight: bold;
+    }
+
+    .target-box {
+      flex: 1;
+      background: rgba(34, 197, 94, 0.03);
+      border: 1px solid rgba(34, 197, 94, 0.15);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .target-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+
+    .target-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .target-points li {
+      position: relative;
+      padding-left: 28px;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
+
+    .target-points li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* SLIDE 3: SOLUTION ARCHITECTURE */
+    .arch-flow {
+      flex: 1.3;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 25px;
+    }
+
+    .arch-diagram {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 40px 10px;
+      position: relative;
+    }
+
+    .arch-diagram::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+      z-index: 1;
+    }
+
+    .arch-node {
+      position: relative;
+      z-index: 2;
+      width: 130px;
+      height: 130px;
+      background: #111827;
+      border: 2px solid var(--primary);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .arch-node:hover {
+      transform: scale(1.1);
+      box-shadow: 0 0 30px var(--primary-glow);
+    }
+
+    .arch-node.secondary {
+      border-color: var(--secondary);
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
+    }
+
+    .arch-node.secondary:hover {
+      box-shadow: 0 0 30px var(--secondary-glow);
+    }
+
+    .arch-node.accent {
+      border-color: var(--accent);
+      box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+    }
+
+    .arch-node.accent:hover {
+      box-shadow: 0 0 30px rgba(34, 197, 94, 0.4);
+    }
+
+    .node-icon {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+    }
+
+    .arch-desc-box {
+      flex: 0.7;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .arch-desc-title {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .arch-desc-text {
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    /* SLIDE 4: INPUT & OUTPUT SCHEMAS */
+    .schema-left {
+      flex: 0.7;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .schema-btn {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: left;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .schema-btn.active {
+      background: rgba(99, 102, 241, 0.1);
+      border-color: var(--primary);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.15);
+    }
+
+    .schema-btn-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .schema-btn.active .schema-btn-icon {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .schema-btn-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .schema-btn-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .schema-right {
+      flex: 1.3;
+      background: rgba(10, 15, 30, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .schema-table-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .schema-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .schema-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: var(--font-title);
+    }
+
+    .schema-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .schema-table tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .col-name {
+      font-family: monospace;
+      font-weight: 600;
+      color: #a5b4fc;
+    }
+
+    .col-type {
+      font-family: monospace;
+      color: var(--secondary);
+    }
+
+    /* SLIDE 5: INTERACTIVE GRAFANA MOCKUP */
+    .dashboard-layout {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .dashboard-header {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 10px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dashboard-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      font-family: var(--font-title);
+    }
+
+    .dashboard-logo-icon {
+      color: #f97316; /* Grafana orange */
+    }
+
+    /* REAL GRAFANA STYLES */
+    .grafana-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 15px;
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .grafana-col-left {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .grafana-kpi-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+    }
+
+    .grafana-panel {
+      background: #111827;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .kpi-card-real {
+      height: 110px;
+      justify-content: center;
+    }
+
+    .panel-title-real {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 5px;
+      font-family: var(--font-title);
+    }
+
+    .panel-value-real {
+      font-size: 2.2rem;
+      font-weight: 800;
+      font-family: var(--font-title);
+    }
+
+    .red-text {
+      color: #ef4444; /* matching pink/red in the image */
+      text-shadow: 0 0 10px rgba(239, 68, 68, 0.2);
+    }
+
+    .green-text {
+      color: #22c55e; /* matching green in the image */
+      text-shadow: 0 0 10px rgba(34, 197, 94, 0.2);
+    }
+
+    .pie-chart-panel {
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .pie-chart-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      flex: 1;
+      gap: 15px;
+    }
+
+    .pie-chart-svg-wrapper {
+      width: 140px;
+      height: 140px;
+    }
+
+    .pie-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg); /* align top start */
+    }
+
+    .pie-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.75rem;
+      color: var(--text-main);
+    }
+
+    .legend-color {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .yellow-bg {
+      background-color: #d97706;
+    }
+
+    .green-bg {
+      background-color: #22c55e;
+    }
+
+    .grafana-col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .bar-chart-panel {
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .bar-chart-real-container {
+      display: flex;
+      flex: 1;
+      position: relative;
+      margin-top: 10px;
+      gap: 10px;
+    }
+
+    .chart-y-axis {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      width: 30px;
+      text-align: right;
+      padding-bottom: 20px;
+    }
+
+    .chart-bars-real {
+      display: flex;
+      flex: 1;
+      justify-content: space-around;
+      align-items: flex-end;
+      border-left: 1px solid rgba(255,255,255,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding-bottom: 5px;
+      padding-left: 5px;
+    }
+
+    .bar-group-real {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      max-width: 50px;
+    }
+
+    .bar-val-real {
+      font-size: 0.65rem;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+
+    .bar-container-real {
+      width: 100%;
+      height: 110px;
+      background: rgba(255,255,255,0.01);
+      position: relative;
+      border-radius: 2px;
+    }
+
+    .bar-fill-real {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #22c55e; /* green bars matching image */
+      border-radius: 2px;
+      transition: height 1.2s ease-out;
+    }
+
+    .bar-label-real {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .bar-legend-real {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      margin-top: 5px;
+      justify-content: center;
+    }
+
+    .line-chart-panel {
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .line-chart-real-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      position: relative;
+      margin-top: 10px;
+      justify-content: center;
+    }
+
+    .line-chart-svg {
+      width: 100%;
+      height: 110px;
+    }
+
+    .line-chart-x-axis {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 15px;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .line-legend-real {
+      display: flex;
+      gap: 15px;
+      font-size: 0.7rem;
+      justify-content: center;
+      margin-top: 5px;
+    }
+
+    /* SLIDE 6: SUMMARY & OUTCOME */
+    .outcome-card {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      transition: var(--transition);
+    }
+
+    .outcome-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary);
+    }
+
+    .outcome-card.purple:hover { border-color: var(--secondary); }
+    .outcome-card.green:hover { border-color: var(--accent); }
+
+    .outcome-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 20px;
+      background: rgba(99, 102, 241, 0.1);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+    }
+
+    .outcome-card.purple .outcome-icon {
+      background: rgba(168, 85, 247, 0.1);
+      color: var(--secondary);
+    }
+
+    .outcome-card.green .outcome-icon {
+      background: rgba(34, 197, 94, 0.1);
+      color: var(--accent);
+    }
+
+    .outcome-title {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+
+    .outcome-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- DECK SLIDE CONTAINER -->
+  <div id="deck-container">
+    
+    <!-- SLIDE 1: WELCOME SLIDE -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">Dự Án Data Engineering</div>
+        </div>
+        <div class="slide-subtitle">Trình bày báo cáo dự án | Thời lượng: 1.5 Phút</div>
+      </div>
+      
+      <div class="slide-content">
+        <div class="welcome-left">
+          <h1 class="welcome-title">Micro-batch ETL Pipeline<br><span class="gradient-text">Recruitment Marketing</span></h1>
+          <p class="welcome-desc">
+            Xây dựng hệ thống tự động hóa xử lý và trực quan hóa dữ liệu tương tác quảng cáo tin tuyển dụng thời gian thực sử dụng PySpark, Cassandra và MySQL.
+          </p>
+          <div class="profile-card">
+            <div class="avatar-icon">DE</div>
+            <div class="profile-info">
+              <h4>Data Engineer</h4>
+              <p>Người thiết kế & triển khai hệ thống</p>
+            </div>
+          </div>
+        </div>
+        
+        <div class="welcome-right">
+          <div class="glowing-art">
+            <div class="glowing-circle"></div>
+            <div class="glowing-circle"></div>
+            <div class="glowing-circle"></div>
+            <div class="glowing-core">
+              <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color: #fff;"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 1 / 6</div>
+        <div>Nhấn [Space] hoặc các mũi tên để điều khiển</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2: THE CHALLENGE -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">S - Situation (Bối cảnh)</div>
+          <h2 class="slide-title">Vấn đề đặt ra & Thách thức</h2>
+        </div>
+      </div>
+      
+      <div class="slide-content">
+        <div class="problem-box">
+          <div class="problem-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <h3>Tình trạng dữ liệu thô (Cassandra Log)</h3>
+          </div>
+          <ul class="problem-points">
+            <li>Hành vi tương tác của ứng viên (Clicks, Applies, Qualify...) được lưu trữ dưới dạng bản ghi thô (Logs) trong Cassandra.</li>
+            <li>Dữ liệu phi cấu trúc khối lượng lớn, không có định dạng phân tích, gây nghẽn hiệu suất nếu truy vấn trực tiếp.</li>
+            <li>Không thể liên kết trực tiếp với siêu dữ liệu (Metadata) của các doanh nghiệp và tin tuyển dụng.</li>
+          </ul>
+          <div class="slide-subtitle" style="color: #f87171;">Hệ quả: Các quyết định tối ưu ngân sách quảng cáo của Marketing phụ thuộc vào cảm tính.</div>
+        </div>
+
+        <div class="target-box">
+          <div class="target-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h3>Yêu cầu Nghiệp vụ (Task)</h3>
+          </div>
+          <ul class="target-points">
+            <li>Phải tính toán tự động và đo lường chính xác hiệu suất của từng tin tuyển dụng (Jobs), chiến dịch (Campaigns).</li>
+            <li>Đo lường hiệu quả truyền thông từ các nhà phân phối quảng cáo (Publishers).</li>
+            <li>Đầu ra dữ liệu phải được chuẩn hóa, cập nhật liên tục dạng thời gian thực (Near Real-time) lên Dashboard trực quan.</li>
+          </ul>
+          <div class="slide-subtitle" style="color: #4ade80;">Mục tiêu: Đưa ra quyết định chi tiêu ngân sách quảng cáo dựa trên dữ liệu thực.</div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 2 / 6</div>
+        <div>Hệ thống ETL Recruitment Marketing</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: PROCESS WORKFLOW -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">A - Action (Hành động)</div>
+          <h2 class="slide-title">Kiến Trúc Micro-batch ETL 3 Bước</h2>
+        </div>
+        <div class="slide-subtitle">Tự động kích hoạt song song mỗi 3 phút</div>
+      </div>
+      
+      <div class="slide-content">
+        <div class="arch-flow">
+          <div class="arch-diagram">
+            <div class="arch-node" onclick="showArchDetails('extract')">
+              <span class="node-icon">📥</span>
+              <span>1. EXTRACT</span>
+              <span style="font-size: 0.65rem; color: #a5b4fc; margin-top: 4px;">Incremental Load</span>
+            </div>
+            
+            <div class="arch-node secondary" onclick="showArchDetails('transform')">
+              <span class="node-icon">⚙️</span>
+              <span>2. TRANSFORM</span>
+              <span style="font-size: 0.65rem; color: #c084fc; margin-top: 4px;">PySpark Aggregation</span>
+            </div>
+            
+            <div class="arch-node accent" onclick="showArchDetails('load')">
+              <span class="node-icon">📤</span>
+              <span>3. LOAD</span>
+              <span style="font-size: 0.65rem; color: #86efac; margin-top: 4px;">MySQL & Grafana</span>
+            </div>
+          </div>
+          
+          <div style="font-size: 0.8rem; text-align: center; color: var(--text-muted);">
+            *Nhấp chuột vào từng nút biểu tượng ở trên để xem chi tiết nghiệp vụ xử lý*
+          </div>
+        </div>
+
+        <div class="arch-desc-box" id="arch-desc-panel">
+          <h3 class="arch-desc-title" id="arch-desc-title">📥 Bước 1: Extract (Trích xuất gia tăng)</h3>
+          <p class="arch-desc-text" id="arch-desc-text">
+            Sử dụng mốc thời gian đồng bộ lớn nhất (updated_at) trong MySQL làm ngưỡng lọc. PySpark trích xuất dữ liệu từ bảng nguồn Cassandra bằng cách áp dụng TimeUUID Pushdown Filter để chỉ tải lên dữ liệu mới, tránh quét toàn bộ bảng (CDC).
+          </p>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 3 / 6</div>
+        <div>Xử lý phân tán song song PySpark</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: INPUT & OUTPUT SCHEMAS -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">Luồng dữ liệu (Input & Output)</div>
+          <h2 class="slide-title">Cấu Trúc Các Bảng Dữ Liệu</h2>
+        </div>
+      </div>
+      
+      <div class="slide-content">
+        <div class="schema-left">
+          <div class="schema-btn active" onclick="switchSchema('cassandra')">
+            <div class="schema-btn-icon">⚡</div>
+            <div>
+              <div class="schema-btn-title">Cassandra Source Table</div>
+              <div class="schema-btn-desc">recruitment.tracking (Input Log)</div>
+            </div>
+          </div>
+          
+          <div class="schema-btn" onclick="switchSchema('mysql_events')">
+            <div class="schema-btn-icon">📊</div>
+            <div>
+              <div class="schema-btn-title">MySQL Destination Table</div>
+              <div class="schema-btn-desc">events (Aggregated Output)</div>
+            </div>
+          </div>
+          
+          <div class="schema-btn" onclick="switchSchema('mysql_job')">
+            <div class="schema-btn-icon">💼</div>
+            <div>
+              <div class="schema-btn-title">MySQL Metadata Table</div>
+              <div class="schema-btn-desc">job (Job Details)</div>
+            </div>
+          </div>
+          
+          <div class="schema-btn" onclick="switchSchema('mysql_publisher')">
+            <div class="schema-btn-icon">📢</div>
+            <div>
+              <div class="schema-btn-title">MySQL Publisher Table</div>
+              <div class="schema-btn-desc">master_publisher (Kênh quảng cáo)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="schema-right">
+          <div class="schema-table-wrapper">
+            <table class="schema-table" id="schema-table-content">
+              <thead>
+                <tr>
+                  <th>Tên cột</th>
+                  <th>Kiểu dữ liệu</th>
+                  <th>Mô tả chức năng</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Dynamic Content insertion based on selection -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 4 / 6</div>
+        <div>Cấu trúc dữ liệu Hệ thống ETL</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: INTERACTIVE DASHBOARD -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">Trực quan hóa</div>
+          <h2 class="slide-title">Bảng Dashboard Trực Quan Hóa Thực Tế</h2>
+        </div>
+        <div class="slide-subtitle">Trực quan hóa thời gian thực (Near Real-time) trên Grafana</div>
+      </div>
+      
+      <div class="slide-content">
+        <div class="dashboard-layout">
+          <!-- Mock Grafana Header -->
+          <div class="dashboard-header">
+            <div class="dashboard-logo">
+              <span class="dashboard-logo-icon">🔥</span>
+              <span>Recruitment Marketing Performance Dashboard</span>
+            </div>
+            <div style="font-size: 0.75rem; color: var(--accent); background: rgba(34, 197, 94, 0.1); padding: 4px 10px; border-radius: 4px; display: flex; align-items: center; gap: 5px;">
+              <span style="width: 6px; height: 6px; background: var(--accent); border-radius: 50%; display: inline-block;"></span>
+              Live data from MySQL
+            </div>
+          </div>
+          
+          <!-- Mock Grafana Grid Layout -->
+          <div class="grafana-grid">
+            
+            <!-- Left Column: KPI Cards + Pie Chart -->
+            <div class="grafana-col-left">
+              <!-- KPI Cards Row -->
+              <div class="grafana-kpi-row">
+                <!-- Panel 1: Tổng chi phí (Spend) -->
+                <div class="grafana-panel kpi-card-real">
+                  <div class="panel-title-real">Tổng chi phí (Spend)</div>
+                  <div class="panel-value-real red-text" id="real-spend">$1.06K</div>
+                </div>
+                <!-- Panel 2: Tỷ lệ chuyển đổi -->
+                <div class="grafana-panel kpi-card-real">
+                  <div class="panel-title-real">Tỷ lệ chuyển đổi</div>
+                  <div class="panel-value-real green-text" id="real-conversion">2.01%</div>
+                </div>
+              </div>
+              
+              <!-- Panel 3: Tỉ lệ hồ sơ đạt chuẩn (Pie Chart) -->
+              <div class="grafana-panel pie-chart-panel">
+                <div class="panel-title-real">Tỉ lệ hồ sơ đạt chuẩn</div>
+                <div class="pie-chart-container">
+                  <div class="pie-chart-svg-wrapper">
+                    <!-- SVG Pie Chart -->
+                    <svg viewBox="0 0 100 100" class="pie-svg">
+                      <!-- Disqualified (Yellow) from angle 0 to 172.8 deg (48%) -->
+                      <!-- Qualified (Green) from angle 172.8 to 360 deg (52%) -->
+                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#22c55e" stroke-width="20" stroke-dasharray="251.2" stroke-dashoffset="0"></circle>
+                      <circle cx="50" cy="50" r="40" fill="transparent" stroke="#d97706" stroke-width="20" stroke-dasharray="120.5 251.2" stroke-dashoffset="0" transform="rotate(-90 50 50)"></circle>
+                    </svg>
+                  </div>
+                  <div class="pie-legend">
+                    <div class="legend-item">
+                      <span class="legend-color yellow-bg"></span>
+                      <span>Không Đạt (Disqualified)</span>
+                    </div>
+                    <div class="legend-item">
+                      <span class="legend-color green-bg"></span>
+                      <span>Đạt Yêu Cầu (Qualified)</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right Column: Top 5 Publishers + Clicks & Conversions Line Chart -->
+            <div class="grafana-col-right">
+              <!-- Panel 4: Top 5 Nguồn Tuyển Dụng (Publishers) -->
+              <div class="grafana-panel bar-chart-panel">
+                <div class="panel-title-real">Top 5 Nguồn Tuyển Dụng (Publishers)</div>
+                <div class="bar-chart-real-container">
+                  <!-- Y-Axis labels -->
+                  <div class="chart-y-axis">
+                    <span>1200</span>
+                    <span>1000</span>
+                    <span>800</span>
+                    <span>600</span>
+                    <span>400</span>
+                    <span>200</span>
+                    <span>0</span>
+                  </div>
+                  <!-- Bars -->
+                  <div class="chart-bars-real">
+                    <div class="bar-group-real">
+                      <div class="bar-val-real">1049</div>
+                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 87%;"></div></div>
+                      <div class="bar-label-real">1</div>
+                    </div>
+                    <div class="bar-group-real">
+                      <div class="bar-val-real">6</div>
+                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 3%;"></div></div>
+                      <div class="bar-label-real">3</div>
+                    </div>
+                    <div class="bar-group-real">
+                      <div class="bar-val-real">1</div>
+                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 1.5%;"></div></div>
+                      <div class="bar-label-real">2</div>
+                    </div>
+                    <div class="bar-group-real">
+                      <div class="bar-val-real">1</div>
+                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 1.5%;"></div></div>
+                      <div class="bar-label-real">37</div>
+                    </div>
+                    <div class="bar-group-real">
+                      <div class="bar-val-real">2</div>
+                      <div class="bar-container-real"><div class="bar-fill-real" style="height: 2%;"></div></div>
+                      <div class="bar-label-real">28</div>
+                    </div>
+                  </div>
+                </div>
+                <div class="bar-legend-real">
+                  <span class="legend-color green-bg"></span>
+                  <span>Tổng số Clicks</span>
+                </div>
+              </div>
+
+              <!-- Panel 5: Xu Hướng Clicks & Conversions -->
+              <div class="grafana-panel line-chart-panel">
+                <div class="panel-title-real">Xu Hướng Clicks & Conversions</div>
+                <div class="line-chart-real-container">
+                  <!-- Custom Line chart with SVG overlay or paths -->
+                  <svg viewBox="0 0 400 120" class="line-chart-svg">
+                    <!-- Grid Lines -->
+                    <line x1="10" y1="20" x2="390" y2="20" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+                    <line x1="10" y1="50" x2="390" y2="50" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+                    <line x1="10" y1="80" x2="390" y2="80" stroke="rgba(255,255,255,0.05)" stroke-width="1"></line>
+                    <line x1="10" y1="110" x2="390" y2="110" stroke="rgba(255,255,255,0.1)" stroke-width="1"></line>
+                    
+                    <!-- Yellow Line: Lượt Conversion (stays flat/low around y=90 (val=10) then y=110 (val=2) at x=280) -->
+                    <!-- Coordinates mapping:
+                         Times: 05:00(x=15), 05:30(x=50), 06:00(x=85), 06:30(x=120), 07:00(x=155), 07:30(x=190), 08:00(x=225), 08:30(x=260), 09:00(x=295), 09:30(x=330), 10:00(x=365)
+                         Values map to Y coordinates:
+                         0 value -> y=110.
+                         10 value -> y=90.
+                         40 value -> y=30.
+                    -->
+                    <path d="M 15,90 L 50,90 L 85,90 L 120,90 L 155,90 L 190,90 L 225,90 L 295,106" fill="transparent" stroke="#d97706" stroke-width="2"></path>
+                    <circle cx="225" cy="90" r="3" fill="#d97706"></circle>
+                    <circle cx="295" cy="106" r="3" fill="#d97706"></circle>
+
+                    <!-- Green Line: Clicks -->
+                    <path d="M 225,102 L 295,34 L 365,98" fill="transparent" stroke="#22c55e" stroke-width="2"></path>
+                    <circle cx="225" cy="102" r="3" fill="#22c55e"></circle>
+                    <circle cx="295" cy="34" r="3" fill="#22c55e"></circle>
+                    <circle cx="365" cy="98" r="3" fill="#22c55e"></circle>
+                  </svg>
+                  <div class="line-chart-x-axis">
+                    <span>05:00</span>
+                    <span>06:00</span>
+                    <span>07:00</span>
+                    <span>08:00</span>
+                    <span>09:00</span>
+                    <span>10:00</span>
+                  </div>
+                </div>
+                <div class="line-legend-real">
+                  <div class="legend-item">
+                    <span class="legend-color green-bg"></span>
+                    <span>Lượt Clicks</span>
+                  </div>
+                  <div class="legend-item">
+                    <span class="legend-color yellow-bg"></span>
+                    <span>Lượt Conversion</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 5 / 6</div>
+        <div>Mô phỏng Grafana Dashboard tích hợp MySQL</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: RESULT & OUTCOME -->
+    <div class="slide" id="slide-6">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">R - Result (Kết quả)</div>
+          <h2 class="slide-title">Kết quả Đạt được & Tác động doanh nghiệp</h2>
+        </div>
+      </div>
+      
+      <div class="slide-content" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <div class="outcome-card">
+          <div class="outcome-icon">⏱️</div>
+          <h3 class="outcome-title">Báo Cáo Tức Thì</h3>
+          <p class="outcome-desc">Thời gian cập nhật dữ liệu báo cáo giảm từ hàng ngày xuống chỉ còn 3 phút. Dashboard hiển thị nhanh chỉ trong 2 giây.</p>
+        </div>
+        
+        <div class="outcome-card purple">
+          <div class="outcome-icon">🎯</div>
+          <h3 class="outcome-title">Tối Ưu Ngân Sách</h3>
+          <p class="outcome-desc">Phân tích rõ rệt tỷ lệ chuyển đổi hiệu quả của từng tin tuyển dụng, giúp dừng hoặc tăng ngân sách kịp thời.</p>
+        </div>
+        
+        <div class="outcome-card green">
+          <div class="outcome-icon">📈</div>
+          <h3 class="outcome-title">Đánh Giá Kênh</h3>
+          <p class="outcome-desc">Xếp hạng chính xác chất lượng ứng viên từ các nguồn cung cấp (Publishers), loại bỏ các kênh ảo thiếu hiệu quả.</p>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 6 / 6</div>
+        <div>Hoàn thành mục tiêu Data Pipeline</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- SLIDE DECK CONTROL BAR -->
+  <div id="nav-controls">
+    <div class="nav-btn-group">
+      <button class="nav-btn" id="prev-btn" onclick="prevSlide()" disabled>
+        ← Trước
+      </button>
+      <button class="nav-btn" id="next-btn" onclick="nextSlide()">
+        Tiếp Theo →
+      </button>
+    </div>
+    
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+    
+    <div id="slide-indicator">Slide 1 / 6</div>
+  </div>
+
+  <script>
+    /* SCHEMA DEFINITIONS DATA */
+    const schemaData = {
+      cassandra: [
+        { name: "create_time", type: "TEXT (UUIDv1)", desc: "Khóa chính tự sinh dạng TimeUUID để phân giải thời gian sự kiện" },
+        { name: "bid", type: "INT", desc: "Đơn giá thầu của tin tuyển dụng tại thời điểm tương tác" },
+        { name: "campaign_id", type: "INT", desc: "Mã chiến dịch marketing liên kết" },
+        { name: "custom_track", type: "TEXT", desc: "Loại tương tác của người dùng: 'click', 'conversion', 'qualified', 'unqualified'" },
+        { name: "group_id", type: "INT", desc: "Mã nhóm tin tuyển dụng" },
+        { name: "job_id", type: "INT", desc: "Mã tin tuyển dụng" },
+        { name: "publisher_id", type: "INT", desc: "Mã nhà phân phối tin tuyển dụng phát sinh click" },
+        { name: "ts", type: "TEXT", desc: "Mốc thời gian định dạng chuẩn yyyy-MM-dd HH:mm:ss" }
+      ],
+      mysql_events: [
+        { name: "id", type: "INT (Auto_Inc)", desc: "Khóa chính tự tăng" },
+        { name: "job_id", type: "INT", desc: "Mã tin tuyển dụng được liên kết" },
+        { name: "dates", type: "DATE", desc: "Ngày ghi nhận dữ liệu đã tổng hợp" },
+        { name: "hours", type: "INT", desc: "Khung giờ tổng hợp (0 - 23h)" },
+        { name: "clicks", type: "INT", desc: "Tổng số lượt nhấp chuột trong khung giờ" },
+        { name: "conversion", type: "INT", desc: "Tổng số lượt nộp hồ sơ thành công" },
+        { name: "qualified_application", type: "INT", desc: "Tổng số hồ sơ được đánh giá đạt tiêu chuẩn" },
+        { name: "disqualified_application", type: "INT", desc: "Tổng số hồ sơ bị đánh giá không đạt tiêu chuẩn" },
+        { name: "bid_set", type: "DECIMAL(10,2)", desc: "Đơn giá thầu trung bình trong khung giờ" },
+        { name: "spend_hour", type: "DECIMAL(10,2)", desc: "Tổng chi phí tiêu tốn = Clicks * Bid_set" },
+        { name: "company_id", type: "INT", desc: "Mã công ty (được làm giàu qua Join bảng Job)" },
+        { name: "publisher_id", type: "INT", desc: "Mã nguồn tuyển dụng" },
+        { name: "campaign_id", type: "INT", desc: "Mã chiến dịch quảng cáo" },
+        { name: "updated_at", type: "TIMESTAMP", desc: "Mốc thời gian đồng bộ cuối cùng của loạt dữ liệu" }
+      ],
+      mysql_job: [
+        { name: "id", type: "INT (Primary Key)", desc: "Mã định danh tin tuyển dụng" },
+        { name: "title", type: "VARCHAR(255)", desc: "Tiêu đề tin tuyển dụng (ví dụ: 'Java Developer')" },
+        { name: "description", type: "TEXT", desc: "Nội dung mô tả công việc chi tiết" },
+        { name: "budget", type: "DECIMAL(10,2)", desc: "Tổng ngân sách tối đa được phân bổ cho tin" },
+        { name: "company_id", type: "INT", desc: "Mã công ty sở hữu tin tuyển dụng" },
+        { name: "campaign_id", type: "INT", desc: "Mã chiến dịch quảng cáo đang chạy" },
+        { name: "is_active", type: "TINYINT", desc: "Trạng thái tin tuyển dụng (1: Hoạt động, 0: Đóng)" }
+      ],
+      mysql_publisher: [
+        { name: "id", type: "INT (Primary Key)", desc: "Mã định danh nguồn quảng cáo" },
+        { name: "publisher_name", type: "VARCHAR(255)", desc: "Tên thương hiệu đối tác (ví dụ: 'Facebook Ads')" },
+        { name: "publisher_email", type: "VARCHAR(255)", desc: "Email liên lạc đối tác" },
+        { name: "min_bid / max_bid", type: "DECIMAL(10,2)", desc: "Giới hạn giá thầu thiết lập cho kênh" },
+        { name: "countries", type: "VARCHAR(255)", desc: "Các quốc gia áp dụng kênh này" }
+      ]
+    };
+
+    /* ARCHITECTURE DETAIL PANEL DATA */
+    const archDetails = {
+      extract: {
+        title: "📥 Bước 1: Extract (Trích xuất gia tăng)",
+        text: "Sử dụng mốc thời gian đồng bộ lớn nhất (updated_at) trong MySQL làm ngưỡng lọc. PySpark trích xuất dữ liệu từ bảng nguồn Cassandra bằng cách áp dụng TimeUUID Pushdown Filter để chỉ tải lên dữ liệu mới, tránh quét toàn bộ bảng (CDC)."
+      },
+      transform: {
+        title: "⚙️ Bước 2: Transform (Tổng hợp & Liên kết)",
+        text: "Sử dụng PySpark thực hiện làm sạch dữ liệu và tách các luồng để tính toán song song theo clicks, conversions, qualified, unqualified. Sau đó, gom nhóm (Group By) theo bộ khóa chung và thực hiện phép kết hợp (Left Join) với bảng Job trong MySQL để gán company_id tương ứng."
+      },
+      load: {
+        title: "📤 Bước 3: Load (Nạp dữ liệu & Trực quan)",
+        text: "Sử dụng Spark JDBC kết nối trực tiếp đến MySQL ở chế độ 'append' để ghi nhận dữ liệu đã được làm giàu vào bảng 'events'. Grafana Dashboard sẽ truy vấn liên tục bảng MySQL này để cập nhật trực quan hóa thời gian thực (Near Real-time)."
+      }
+    };
+
+    /* STATE VARIABLES */
+    let currentSlideIndex = 1;
+    const totalSlides = 6;
+
+    /* KEYBOARD & SCROLL HANDLERS */
+    document.addEventListener("keydown", (e) => {
+      if (e.code === "Space" || e.code === "ArrowRight") {
+        nextSlide();
+      } else if (e.code === "ArrowLeft") {
+        prevSlide();
+      }
+    });
+
+    /* FUNCTION NAVIGATION */
+    function updateControls() {
+      // Slides toggle
+      for (let i = 1; i <= totalSlides; i++) {
+        const slide = document.getElementById(`slide-${i}`);
+        if (i === currentSlideIndex) {
+          slide.classList.add("active");
+        } else {
+          slide.classList.remove("active");
+        }
+      }
+
+      // Progress bar
+      const progressPercent = ((currentSlideIndex - 1) / (totalSlides - 1)) * 100;
+      document.getElementById("progress-bar").style.width = `${progressPercent}%`;
+
+      // Buttons active/disable state
+      document.getElementById("prev-btn").disabled = currentSlideIndex === 1;
+      document.getElementById("next-btn").disabled = currentSlideIndex === totalSlides;
+      
+      // Indicators
+      document.getElementById("slide-indicator").textContent = `Slide ${currentSlideIndex} / ${totalSlides}`;
+
+      // Trigger animations for specific slides
+      if (currentSlideIndex === 5) {
+        animateDashboardMockup();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlideIndex < totalSlides) {
+        currentSlideIndex++;
+        updateControls();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlideIndex > 1) {
+        currentSlideIndex--;
+        updateControls();
+      }
+    }
+
+    /* ARCHITECTURE DETAIL SWITCHER */
+    function showArchDetails(step) {
+      const data = archDetails[step];
+      const panelTitle = document.getElementById("arch-desc-title");
+      const panelText = document.getElementById("arch-desc-text");
+      const panel = document.getElementById("arch-desc-panel");
+      
+      // Flash fade animation
+      panel.style.opacity = 0;
+      setTimeout(() => {
+        panelTitle.innerHTML = data.title;
+        panelText.innerHTML = data.text;
+        panel.style.opacity = 1;
+      }, 200);
+      
+      // Update nodes highlights
+      const nodes = document.querySelectorAll(".arch-node");
+      nodes.forEach(node => {
+        node.style.transform = "scale(1)";
+      });
+    }
+
+    /* SCHEMA SWITCHER */
+    function switchSchema(schemaKey) {
+      const buttons = document.querySelectorAll(".schema-btn");
+      buttons.forEach(btn => btn.classList.remove("active"));
+      
+      // Add active to selected button
+      const targetBtn = Array.from(buttons).find(btn => btn.getAttribute("onclick").includes(schemaKey));
+      if (targetBtn) targetBtn.classList.add("active");
+
+      // Load table entries
+      const list = schemaData[schemaKey];
+      const tbody = document.querySelector("#schema-table-content tbody");
+      tbody.innerHTML = ""; // Clear
+
+      list.forEach(col => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="col-name">${col.name}</td>
+          <td class="col-type">${col.type}</td>
+          <td>${col.desc}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    /* REAL-TIME DASHBOARD SIMULATION */
+    let dashboardTimer = null;
+    function animateDashboardMockup() {
+      // Clear previous timer
+      if (dashboardTimer) clearInterval(dashboardTimer);
+      
+      const spendVal = document.getElementById("real-spend");
+      const convRateVal = document.getElementById("real-conversion");
+      
+      let baseSpend = 1060.00;
+      let baseConvRate = 2.01;
+
+      // Animate Chart Bars
+      const bars = document.querySelectorAll(".bar-fill-real");
+      const heights = [87, 3, 1.5, 1.5, 2];
+      bars.forEach((bar, idx) => {
+        bar.style.height = "0%";
+        setTimeout(() => {
+          bar.style.height = `${heights[idx]}%`;
+        }, 100 * idx);
+      });
+
+      // Periodic Live updating simulation
+      dashboardTimer = setInterval(() => {
+        // Add random slight changes matching live traffic
+        const spendIncrease = Math.random() > 0.6 ? (Math.random() * 2 + 0.5) : 0;
+        const convRateShift = Math.random() > 0.7 ? (Math.random() * 0.04 - 0.02) : 0;
+
+        baseSpend += spendIncrease;
+        baseConvRate += convRateShift;
+
+        // format to $X.XXK
+        const spendFormatted = `$${(baseSpend / 1000).toFixed(2)}K`;
+        spendVal.textContent = spendFormatted;
+        
+        convRateVal.textContent = `${baseConvRate.toFixed(2)}%`;
+
+        // Pulse briefly on update
+        if (spendIncrease > 0) {
+          spendVal.style.color = "#ff6b6b";
+          setTimeout(() => spendVal.style.color = "#ef4444", 400);
+        }
+        if (Math.abs(convRateShift) > 0) {
+          convRateVal.style.color = "#4ade80";
+          setTimeout(() => convRateVal.style.color = "#22c55e", 400);
+        }
+      }, 3000);
+    }
+
+    // Initialize Schema View & Controller setup on load
+    window.addEventListener("DOMContentLoaded", () => {
+      switchSchema("cassandra");
+      // Pre-warm details panel
+      showArchDetails("extract");
+    });
+  </script>
+</body>
+</html>

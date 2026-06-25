@@ -1,9 +1,3 @@
-# Recruitment Marketing Data Pipeline (ETL & Dashboard)
-
-Dự án này xây dựng một hệ thống **Data Pipeline (ETL)** tự động để thu thập, xử lý và trực quan hóa dữ liệu hành vi người dùng trên nền tảng tuyển dụng. Hệ thống giúp doanh nghiệp theo dõi hiệu quả của các tin tuyển dụng (Jobs), chiến dịch marketing (Campaigns) và các nguồn tuyển dụng (Publishers) theo thời gian thực (Near Real-time).
-
----
-
 ## 📌 1. Bối Cảnh & Nhiệm Vụ (Situation & Task)
 
 ### 🎬 Situation (Bối cảnh)
