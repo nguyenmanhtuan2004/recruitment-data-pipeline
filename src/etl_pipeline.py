@@ -48,6 +48,7 @@ def create_spark_session():
         .config("spark.cassandra.connection.port", CASSANDRA_PORT) \
         .config("spark.cassandra.auth.username", CASSANDRA_USER) \
         .config("spark.cassandra.auth.password", CASSANDRA_PASSWORD) \
+        .config("spark.driver.memory", "512m") \
         .getOrCreate()
     
     spark.sparkContext.setLogLevel("WARN")

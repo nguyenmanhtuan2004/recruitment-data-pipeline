@@ -25,8 +25,10 @@ services:
     container_name: etl_cassandra
     environment:
       CASSANDRA_CLUSTER_NAME: "ETLCluster"
-      # Enables password authentication in Cassandra
       CASSANDRA_AUTHENTICATOR: "PasswordAuthenticator"
+      # Giới hạn dung lượng Heap để tiết kiệm RAM trên Droplet $18
+      MAX_HEAP_SIZE: "512M"
+      HEAP_NEWSIZE: "100M"
     ports:
       - "9042:9042"
     volumes:
@@ -39,33 +41,9 @@ services:
       timeout: 10s
       retries: 5
 
-  # --- PROCESSING (Spark) ---
-  spark-master:
-    image: bitnamilegacy/spark:3.5.1
-    container_name: etl_spark_master
-    environment:
-      - SPARK_MODE=master
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-    ports:
-      - "8080:8080"
-      - "7077:7077"
-    networks:
-      - etl_network
-
-  spark-worker:
-    image: bitnamilegacy/spark:3.5.1
-    container_name: etl_spark_worker
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:7077
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g
-    ports:
-      - "8081:8081"
-    depends_on:
-      - spark-master
-    networks:
-      - etl_network
+  # Ghi chú: Cụm spark-master và spark-worker độc lập đã được gỡ bỏ 
+  # vì Spark được chạy trực tiếp ở chế độ local bên trong container etl-function-app, 
+  # giúp tiết kiệm được hơn 1.5GB RAM trên máy chủ mà không ảnh hưởng tới code.
 
   # --- VISUALIZATION ---
   grafana:
