@@ -136,6 +136,16 @@ def init_mysql():
     """)
     logging.info("Đã tạo/kiểm tra bảng 'job' với cấu trúc 30 cột.")
 
+    # Kiểm tra cấu trúc cũ của events (nếu có) để xóa đi tạo lại nếu không khớp
+    cursor.execute("SHOW TABLES LIKE 'events'")
+    if cursor.fetchone():
+        cursor.execute("DESCRIBE events")
+        columns = cursor.fetchall()
+        column_names = [col[0] for col in columns]
+        if len(columns) != 17 or 'updated_at' not in column_names:
+            logging.info("Bảng 'events' cũ không khớp cấu trúc mới (17 cột). Đang tiến hành xóa và tạo lại...")
+            cursor.execute("DROP TABLE events")
+
     # 4. Tạo bảng events (Đích của ETL)
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS events (
