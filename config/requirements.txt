@@ -1,3 +1,5 @@
 azure-functions
 pyspark==3.5.1
 cassandra-driver
+mysql-connector-python
+pandas
