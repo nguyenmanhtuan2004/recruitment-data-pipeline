@@ -41,9 +41,14 @@ MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver"
 # ==========================================
 def create_spark_session():
     """Khởi tạo SparkSession cục bộ cho lượt chạy hiện tại"""
+    import os
+    os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
+
     spark = SparkSession.builder \
         .appName("AzureFunction-ETL") \
         .config("spark.jars.packages", "com.datastax.spark:spark-cassandra-connector_2.12:3.5.1,com.mysql:mysql-connector-j:8.3.0") \
+        .config("spark.jars.ivy", "/tmp/.ivy2") \
+        .config("spark.driver.extraJavaOptions", "-Djava.net.preferIPv4Stack=true") \
         .config("spark.cassandra.connection.host", CASSANDRA_HOST) \
         .config("spark.cassandra.connection.port", CASSANDRA_PORT) \
         .config("spark.cassandra.auth.username", CASSANDRA_USER) \

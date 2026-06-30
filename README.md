@@ -140,3 +140,71 @@ python src/generate_dummy_data_api.py
     ![Grafana Dashboard (Screenshot)](doc/grafana_dashboard.png)
 
 
+---
+
+## 🌐 4. Hướng Dẫn Sử Dụng & Kiểm Thử Trên Production (Cloud Deployment)
+
+Sau khi hệ thống được deploy thành công lên server cloud (DigitalOcean Droplet), bạn có thể kiểm thử luồng dữ liệu thời gian thực theo hướng dẫn dưới đây:
+
+### 📊 4.1. Địa Chỉ Xem Dashboard Trực Quan
+Hệ thống hỗ trợ 2 giao diện để theo dõi và kiểm tra dữ liệu:
+1. **Grafana Dashboard (Theo dõi KPI tổng hợp):**
+   * **URL:** `http://159.223.41.98:3000`
+   * **Đăng nhập:** Tài khoản mặc định là `admin`/`admin` (hoặc mật khẩu mới bạn đã cập nhật).
+   * **Cách xem dữ liệu thay đổi:** Nhấp vào nút **Refresh** (vòng xoay) ở góc trên bên phải, hoặc chọn mốc thời gian xem là **Last 5 years** (để bao quát dữ liệu mới năm 2026 và dữ liệu mẫu năm 2022).
+2. **Interactive Web UI (Giao diện giả lập client):**
+   * **URL:** `http://159.223.41.98:8082/api/ui`
+   * **Chức năng:** Cho phép click chọn tin tuyển dụng và bấm gửi log nhanh ngay trên trình duyệt mà không cần viết code.
+
+---
+
+### 📥 4.2. Cách Đẩy Dữ Liệu Vào Ingestion API
+Để mô phỏng hành vi người dùng (click, apply...) đổ về hệ thống, bạn có thể đẩy dữ liệu dạng JSON thông qua phương thức POST:
+
+* **Method:** `POST`
+* **URL:** `http://159.223.41.98:8082/api/track`
+* **Headers:** `Content-Type: application/json`
+* **JSON Payload mẫu:**
+  ```json
+  {
+    "custom_track": "click",
+    "bid": 2,
+    "job_id": 1,
+    "publisher_id": 1,
+    "campaign_id": 10,
+    "group_id": 20
+  }
+  ```
+
+#### 💻 Cách gửi dữ liệu (Chọn 1 trong 3 cách):
+
+* **Cách A: Dùng lệnh CURL (Chạy trên Terminal của máy Windows hoặc PuTTY):**
+  ```bash
+  curl -X POST http://159.223.41.98:8082/api/track \
+    -H "Content-Type: application/json" \
+    -d '{"bid": 2, "campaign_id": 10, "custom_track": "click", "group_id": 20, "job_id": 1, "publisher_id": 1}'
+  ```
+
+* **Cách B: Sử dụng giao diện Interactive Web UI** tại đường dẫn `http://159.223.41.98:8082/api/ui`.
+
+* **Cách C: Chạy Script tự động sinh dữ liệu ảo liên tục (Đẩy dữ liệu tự động mỗi 30 giây):**
+  Bạn kết nối vào **PuTTY** và chạy câu lệnh dưới đây để bắt đầu sinh dữ liệu tự động bắn lên API liên tục:
+  ```bash
+  docker exec -it -e API_URL=http://127.0.0.1:80/api/track etl_function_app python /home/site/wwwroot/src/generate_dummy_data_api.py
+  ```
+  *(Để dừng tiến trình, bạn nhấn tổ hợp phím `Ctrl + C` trên cửa sổ PuTTY).*
+
+---
+
+### 🔄 4.3. Quan Sát Dữ Liệu Thay Đổi Theo Thời Gian (Real-time Flow)
+Để thấy được dữ liệu thực sự nhảy số thời gian thực trên biểu đồ:
+1. Chạy **Cách C** ở trên để dữ liệu thô liên tục được đẩy vào hệ thống.
+2. Mở thêm 1 cửa sổ PuTTY mới để giám sát logs chạy ngầm của tiến trình Spark ETL:
+   ```bash
+   docker logs -f etl_function_app
+   ```
+   Bạn sẽ thấy log báo: *"Background Spark ETL completed successfully in XXs."* cứ mỗi khi có tin nhắn từ queue kích hoạt.
+3. Mở **Grafana Dashboard** trên trình duyệt, nhấp chọn khoảng xem thời gian là **Last 5 years**, bật tự động làm mới **10s** (Auto-refresh 10s) ở góc trên bên phải. Bạn sẽ thấy các biểu đồ đường và chỉ số KPI tự động tăng tiến và thay đổi cực kỳ sinh động!
+
+
+

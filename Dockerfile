@@ -1,8 +1,8 @@
 FROM mcr.microsoft.com/azure-functions/python:4-python3.10
 
-# Cài đặt Java JRE để chạy được PySpark
+# Cài đặt Java JRE và procps (cung cấp lệnh 'ps' cho PySpark) để chạy được PySpark ổn định
 RUN apt-get update && \
-    apt-get install -y default-jre && \
+    apt-get install -y default-jre procps && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
