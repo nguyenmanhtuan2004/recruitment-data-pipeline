@@ -581,19 +581,13 @@
         // Auto-detect and configure default API URL
         let defaultHost = 'http://159.223.41.98:8082'; // Default to Production Server IP
         
-        if (window.location.hostname === '159.223.41.98') {
-            // Accessed directly on the server's IP
-            defaultHost = window.location.origin;
-        } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            // Local development
-            if (window.location.port === '8082' || window.location.pathname.includes('/api/')) {
-                defaultHost = window.location.origin;
-            } else {
+        // Only use current host/origin if the page is loaded directly from the container's UI endpoint
+        if (window.location.port === '8082' || window.location.pathname.includes('/api/')) {
+            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
                 defaultHost = 'http://localhost:8082';
+            } else {
+                defaultHost = window.location.origin;
             }
-        } else if (window.location.hostname.endsWith('.vercel.app')) {
-            // Deployed to Vercel (targets the remote production server API)
-            defaultHost = 'http://159.223.41.98:8082';
         }
         
         apiUrlInput.value = `${defaultHost}/api/track`;
