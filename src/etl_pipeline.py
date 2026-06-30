@@ -311,13 +311,26 @@ def ui_dashboard(req: func.HttpRequest) -> func.HttpResponse:
 
 
 # POST API: Tiếp nhận dữ liệu -> Lưu Cassandra -> Đẩy vào Queue -> Trả về 202 Accepted lập tức
-@app.route(route="track", methods=["POST"], auth_level=func.AuthLevel.ANONYMOUS)
+@app.route(route="track", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 @app.queue_output(arg_name="msg", queue_name="etl-trigger-queue", connection="AzureWebJobsStorage")
 def track_event(req: func.HttpRequest, msg: func.Out[str]) -> func.HttpResponse:
     import datetime
     import cassandra.util
     
     logging.info("API POST /api/track triggered (Asynchronous Ingestion).")
+    
+    # Xử lý CORS Preflight Request (OPTIONS) cho trình duyệt
+    if req.method == "OPTIONS":
+        return func.HttpResponse(
+            status_code=204,
+            headers={
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+                "Access-Control-Max-Age": "86400"
+            }
+        )
+        
     try:
         # A. Đọc và phân giải Event Payload từ Request Body
         body = req.get_json()
@@ -361,7 +374,7 @@ def track_event(req: func.HttpRequest, msg: func.Out[str]) -> func.HttpResponse:
         msg.set(json.dumps(queue_payload))
         logging.info("ETL trigger message pushed to Queue.")
         
-        # D. Trả về phản hồi lập tức cho client (HTTP 202 Accepted)
+        # D. Trả về phản hồi lập tức cho client (HTTP 202 Accepted) kèm CORS header
         return func.HttpResponse(
             body=json.dumps({
                 "status": "accepted",
@@ -374,7 +387,10 @@ def track_event(req: func.HttpRequest, msg: func.Out[str]) -> func.HttpResponse:
                 }
             }),
             mimetype="application/json",
-            status_code=202
+            status_code=202,
+            headers={
+                "Access-Control-Allow-Origin": "*"
+            }
         )
         
     except Exception as e:
@@ -382,7 +398,10 @@ def track_event(req: func.HttpRequest, msg: func.Out[str]) -> func.HttpResponse:
         return func.HttpResponse(
             body=json.dumps({"status": "error", "message": f"Ingestion failed: {str(e)}"}),
             mimetype="application/json",
-            status_code=400
+            status_code=400,
+            headers={
+                "Access-Control-Allow-Origin": "*"
+            }
         )
 
 
