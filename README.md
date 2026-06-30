@@ -190,6 +190,8 @@ Hệ thống hỗ trợ 2 giao diện để theo dõi và kiểm tra dữ liệu
     -d '{"bid": 2, "campaign_id": 10, "custom_track": "click", "group_id": 20, "job_id": 1, "publisher_id": 1}'
   ```
 
+* **Cách B: Sử dụng giao diện Interactive Web UI** tại đường dẫn `http://159.223.41.98:8082/api/ui`.
+
 
 
 
