@@ -17,5 +17,8 @@
     "MYSQL_PASSWORD": "123",
     "MYSQL_DATABASE": "etl_database",
     "MYSQL_TARGET_TABLE": "events"
+  },
+  "Host": {
+    "CORS": "*"
   }
 }

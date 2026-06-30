@@ -457,6 +457,11 @@
             
             <form id="ingestionForm">
                 <div class="form-group">
+                    <label for="api_url">API Endpoint URL</label>
+                    <input type="text" id="api_url" name="api_url" required placeholder="e.g., http://localhost:8082/api/track">
+                </div>
+
+                <div class="form-group">
                     <label for="custom_track">Event Action (custom_track)</label>
                     <select id="custom_track" name="custom_track" required>
                         <option value="click">Click (Quảng cáo / Tin tuyển dụng)</option>
@@ -551,6 +556,7 @@
 
     <script>
         const ingestionForm = document.getElementById('ingestionForm');
+        const apiUrlInput = document.getElementById('api_url');
         const customTrackSelect = document.getElementById('custom_track');
         const bidGroup = document.getElementById('bidGroup');
         const btnSubmit = document.getElementById('btnSubmit');
@@ -571,6 +577,26 @@
                 bidGroup.style.display = 'none';
             }
         });
+
+        // Auto-detect and configure default API URL
+        let defaultHost = 'http://159.223.41.98:8082'; // Default to Production Server IP
+        
+        if (window.location.hostname === '159.223.41.98') {
+            // Accessed directly on the server's IP
+            defaultHost = window.location.origin;
+        } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            // Local development
+            if (window.location.port === '8082' || window.location.pathname.includes('/api/')) {
+                defaultHost = window.location.origin;
+            } else {
+                defaultHost = 'http://localhost:8082';
+            }
+        } else if (window.location.hostname.endsWith('.vercel.app')) {
+            // Deployed to Vercel (targets the remote production server API)
+            defaultHost = 'http://159.223.41.98:8082';
+        }
+        
+        apiUrlInput.value = `${defaultHost}/api/track`;
 
         // Clear console logs
         btnClearConsole.addEventListener('click', function() {
@@ -649,12 +675,13 @@
                 bid: formData.get('custom_track') === 'click' ? parseFloat(formData.get('bid') || 0) : 0
             };
 
-            log(`Sending Event Ingestion request to POST /api/track...`, 'info');
+            const apiEndpoint = apiUrlInput.value.trim() || '/api/track';
+            log(`Sending Event Ingestion request to POST ${apiEndpoint}...`, 'info');
             log(payload, 'json');
 
             try {
                 // Call local Ingestion & ETL trigger API
-                const response = await fetch('/api/track', {
+                const response = await fetch(apiEndpoint, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
