@@ -60,12 +60,6 @@ services:
         condition: service_healthy
       cassandra:
         condition: service_healthy
-    environment:
-      # Cho phép nhúng Grafana vào thẻ iframe của trang web khác
-      GF_SECURITY_ALLOW_EMBEDDING: "true"
-      # Bật tính năng truy cập không danh tính (cho phép xem dashboard không cần đăng nhập)
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
-      GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
 
   # --- AZURE STORAGE EMULATOR (Azurite) ---
   azurite:
