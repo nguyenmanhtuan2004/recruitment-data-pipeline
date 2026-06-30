@@ -1,469 +1,1349 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Recruitment ETL Ingestion Dashboard</title>
-    <!-- Google Fonts: Inter & JetBrains Mono -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-gradient: linear-gradient(135deg, #090d16 0%, #111827 50%, #1e1b4b 100%);
-            --primary: #00f2fe;
-            --secondary: #4facfe;
-            --accent-purple: #8b5cf6;
-            --success: #10b981;
-            --warning: #f59e0b;
-            --danger: #ef4444;
-            --card-bg: rgba(255, 255, 255, 0.02);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --input-bg: rgba(255, 255, 255, 0.05);
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Recruitment ETL Pipeline Presentation & Controller</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CORE STYLES & VARIABLES */
+    :root {
+      --bg-dark: #f8fafc; /* Light slate background */
+      --card-bg: rgba(255, 255, 255, 0.75);
+      --card-border: rgba(79, 70, 229, 0.08);
+      --primary: #4f46e5; /* Indigo 600 */
+      --primary-glow: rgba(79, 70, 229, 0.12);
+      --secondary: #7c3aed; /* Purple 600 */
+      --secondary-glow: rgba(124, 58, 237, 0.12);
+      --accent: #16a34a; /* Green 600 */
+      --danger: #dc2626; /* Red 600 */
+      --text-main: #0f172a; /* Slate 900 */
+      --text-muted: #475569; /* Slate 600 */
+      --font-title: 'Plus Jakarta Sans', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg-gradient);
-            background-attachment: fixed;
-            color: var(--text-main);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            overflow-x: hidden;
-            padding: 2rem 1rem;
-        }
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 10% 20%, rgba(99, 102, 241, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 90% 80%, rgba(124, 58, 237, 0.04) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(22, 163, 74, 0.01) 0%, transparent 50%);
+      background-attachment: fixed;
+      color: var(--text-main);
+      font-family: var(--font-body);
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+    }
 
-        /* Ambient glowing circles */
-        .ambient-glow {
-            position: absolute;
-            width: 400px;
-            height: 400px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(79, 172, 254, 0.15) 0%, rgba(0, 242, 254, 0) 70%);
-            top: 10%;
-            left: 10%;
-            z-index: -1;
-            filter: blur(40px);
-            pointer-events: none;
-        }
+    /* TYPOGRAPHY */
+    h1, h2, h3, h4 {
+      font-family: var(--font-title);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
 
-        .ambient-glow-2 {
-            position: absolute;
-            width: 500px;
-            height: 500px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(139, 92, 246, 0.12) 0%, rgba(139, 92, 246, 0) 70%);
-            bottom: 10%;
-            right: 10%;
-            z-index: -1;
-            filter: blur(50px);
-            pointer-events: none;
-        }
+    .gradient-text {
+      background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #db2777 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
 
-        .container {
-            width: 100%;
-            max-width: 1100px;
-            display: grid;
-            grid-template-columns: 1.2fr 1fr;
-            gap: 2rem;
-            margin-top: 1.5rem;
-        }
+    /* PRESENTATION FRAMEWORK */
+    #deck-container {
+      flex: 1;
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        @media (max-width: 900px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
-        }
+    .slide {
+      position: absolute;
+      width: 90%;
+      max-width: 1300px;
+      height: 82vh;
+      max-height: 700px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(20px) scale(0.98);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 20px 28px;
+      border-radius: 24px;
+      background: var(--card-bg);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      box-shadow: 0 20px 40px -15px rgba(15, 23, 42, 0.05);
+      overflow: hidden;
+    }
 
-        /* Header design */
-        header {
-            width: 100%;
-            max-width: 1100px;
-            text-align: center;
-            margin-bottom: 1rem;
-            animation: fadeInDown 0.8s ease;
-        }
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateY(0) scale(1);
+    }
 
-        header h1 {
-            font-size: 2.2rem;
-            font-weight: 800;
-            background: linear-gradient(to right, var(--primary), var(--secondary), var(--accent-purple));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            margin-bottom: 0.5rem;
-            letter-spacing: -0.5px;
-        }
+    /* SLIDE COMPONENTS */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
 
-        header p {
-            color: var(--text-muted);
-            font-size: 1rem;
-            font-weight: 400;
-        }
+    .slide-title-area {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
 
-        /* Cards and Glassmorphism */
-        .glass-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 2rem;
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
+    .slide-badge {
+      background: rgba(79, 70, 229, 0.06);
+      border: 1px solid rgba(79, 70, 229, 0.15);
+      color: #4f46e5;
+      padding: 6px 14px;
+      border-radius: 99px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
 
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: linear-gradient(90deg, var(--primary), var(--secondary));
-            opacity: 0.8;
-        }
+    .slide-title {
+      font-size: 2.2rem;
+      font-weight: 800;
+    }
 
-        .glass-card.console-card::before {
-            background: linear-gradient(90deg, var(--secondary), var(--accent-purple));
-        }
+    .slide-subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+      margin-top: 4px;
+    }
 
-        .card-title {
-            font-size: 1.3rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--text-main);
-        }
+    .slide-content {
+      flex: 1;
+      display: flex;
+      gap: 30px;
+      align-items: stretch;
+      overflow: hidden;
+      position: relative;
+    }
 
-        .card-title svg {
-            width: 22px;
-            height: 22px;
-            fill: var(--primary);
-        }
+    .slide-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
 
-        /* Form styling */
-        .form-group {
-            margin-bottom: 1.25rem;
-        }
+    /* CONTROLS & NAVIGATION */
+    #nav-controls {
+      height: 70px;
+      background: rgba(248, 250, 252, 0.85);
+      border-top: 1px solid rgba(0, 0, 0, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 40px;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
 
-        .form-group-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
-            margin-bottom: 1.25rem;
-        }
+    .nav-btn-group {
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
 
-        label {
-            display: block;
-            font-size: 0.85rem;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+    .nav-btn {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.08);
+      color: var(--text-main);
+      padding: 10px 20px;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: var(--font-title);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: var(--transition);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    }
 
-        input[type="text"],
-        input[type="number"],
-        select {
-            width: 100%;
-            background: var(--input-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 8px;
-            padding: 0.75rem 1rem;
-            color: var(--text-main);
-            font-size: 0.95rem;
-            font-family: inherit;
-            outline: none;
-            transition: all 0.2s ease;
-        }
+    .nav-btn:hover:not(:disabled) {
+      background: var(--primary);
+      border-color: var(--primary);
+      color: #ffffff;
+      box-shadow: 0 4px 12px var(--primary-glow);
+    }
 
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        select:focus {
-            border-color: var(--primary);
-            box-shadow: 0 0 0 2px rgba(0, 242, 254, 0.15);
-            background: rgba(255, 255, 255, 0.08);
-        }
+    .nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
 
-        select option {
-            background: #111827;
-            color: var(--text-main);
-        }
+    #progress-container {
+      flex: 1;
+      max-width: 400px;
+      height: 6px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 99px;
+      overflow: hidden;
+      margin: 0 30px;
+    }
 
-        /* Ingest Button */
-        .btn-submit {
-            width: 100%;
-            background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
-            border: none;
-            border-radius: 8px;
-            padding: 0.9rem 1.5rem;
-            color: #0b0f19;
-            font-size: 1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.75rem;
-            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.2);
-            position: relative;
-            overflow: hidden;
-            margin-top: 1.5rem;
-        }
+    #progress-bar {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      transition: var(--transition);
+    }
 
-        .btn-submit:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 242, 254, 0.4);
-            background: linear-gradient(90deg, #05e6f2 0%, #3ca6fe 100%);
-        }
+    #slide-indicator {
+      font-family: var(--font-title);
+      font-weight: 600;
+      color: var(--text-muted);
+    }
 
-        .btn-submit:active:not(:disabled) {
-            transform: translateY(0);
-        }
+    /* SLIDE 1: WELCOME SLIDE */
+    .welcome-left {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
 
-        .btn-submit:disabled {
-            background: rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.3);
-            cursor: not-allowed;
-            box-shadow: none;
-        }
+    .welcome-title {
+      font-size: 2.8rem;
+      line-height: 1.25;
+      font-weight: 800;
+      margin-bottom: 16px;
+    }
 
-        /* Spinner for loading */
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: var(--text-main);
-            animation: spin 0.8s linear infinite;
-            display: none;
-        }
+    .welcome-desc {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 18px;
+      max-width: 780px;
+    }
 
-        /* Console / Logs Panel */
-        .console-container {
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
+    .profile-card {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      padding: 15px 20px;
+      background: rgba(0, 0, 0, 0.02);
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      border-radius: 16px;
+      width: fit-content;
+    }
 
-        .console-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.75rem;
-        }
+    .avatar-icon {
+      width: 45px;
+      height: 45px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #fff;
+    }
 
-        .status-badge {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 0.35rem 0.75rem;
-            font-size: 0.75rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
+    .profile-info h4 {
+      font-size: 0.95rem;
+    }
 
-        .status-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: var(--text-muted);
-            box-shadow: 0 0 8px var(--text-muted);
-        }
+    .profile-info p {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
 
-        .status-badge.idle .status-dot {
-            background: var(--text-muted);
-            box-shadow: 0 0 8px var(--text-muted);
-        }
+    .welcome-right {
+      flex: 0.8;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .status-badge.running .status-dot {
-            background: var(--warning);
-            box-shadow: 0 0 8px var(--warning);
-            animation: pulse 1s infinite alternate;
-        }
+    .glowing-art {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      background: linear-gradient(135deg, rgba(79, 70, 229, 0.04), rgba(124, 58, 237, 0.04));
+      border: 1px solid rgba(79, 70, 229, 0.08);
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 15px 35px rgba(79, 70, 229, 0.04);
+    }
 
-        .status-badge.success .status-dot {
-            background: var(--success);
-            box-shadow: 0 0 8px var(--success);
-        }
+    .glowing-core {
+      width: 90px;
+      height: 90px;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      border-radius: 28px;
+      box-shadow: 0 12px 25px rgba(79, 70, 229, 0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-        .status-badge.error .status-dot {
-            background: var(--danger);
-            box-shadow: 0 0 8px var(--danger);
-        }
+    /* SLIDE 2: THE SITUATION / PROBLEM */
+    .problem-box {
+      flex: 1;
+      background: rgba(220, 38, 38, 0.02);
+      border: 1px solid rgba(220, 38, 38, 0.08);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
 
-        .console-window {
-            flex-grow: 1;
-            background: #040711;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 1rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            line-height: 1.5;
-            color: #10b981; /* Default retro green color */
-            min-height: 320px;
-            max-height: 480px;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.8);
-        }
+    .problem-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--danger);
+      margin-bottom: 20px;
+    }
 
-        .console-placeholder {
-            color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 100%;
-            text-align: center;
-            font-style: italic;
-        }
+    .problem-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
 
-        .console-log-entry {
-            margin-bottom: 0.5rem;
-            animation: fadeIn 0.3s ease;
-        }
+    .problem-points li {
+      position: relative;
+      padding-left: 28px;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
 
-        .console-log-entry.timestamp {
-            color: var(--text-muted);
-            font-size: 0.75rem;
-        }
+    .problem-points li::before {
+      content: "✕";
+      position: absolute;
+      left: 0;
+      color: var(--danger);
+      font-weight: bold;
+    }
 
-        .console-log-entry.error {
-            color: var(--danger);
-        }
+    .target-box {
+      flex: 1;
+      background: rgba(22, 163, 74, 0.02);
+      border: 1px solid rgba(22, 163, 74, 0.08);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
 
-        .console-log-entry.info {
-            color: var(--secondary);
-        }
+    .target-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
 
-        .console-log-entry.json {
-            color: #c9d1d9;
-            background: rgba(255, 255, 255, 0.02);
-            padding: 0.5rem;
-            border-radius: 4px;
-            white-space: pre-wrap;
-            margin-top: 0.25rem;
-            border-left: 2px solid var(--accent-purple);
-        }
+    .target-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
 
-        .console-clear-btn {
-            background: none;
-            border: none;
-            color: var(--text-muted);
-            font-size: 0.75rem;
-            cursor: pointer;
-            transition: color 0.2s ease;
-        }
+    .target-points li {
+      position: relative;
+      padding-left: 28px;
+      font-size: 1.05rem;
+      line-height: 1.5;
+    }
 
-        .console-clear-btn:hover {
-            color: var(--text-main);
-        }
+    .target-points li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: bold;
+    }
 
-        /* Toast Notifications */
-        .toast-container {
-            position: fixed;
-            bottom: 2rem;
-            right: 2rem;
-            z-index: 100;
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem;
-        }
+    /* SLIDE 3: SOLUTION ARCHITECTURE */
+    .arch-flow {
+      flex: 1.3;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      background: rgba(0, 0, 0, 0.01);
+      border: 1px solid rgba(0, 0, 0, 0.03);
+      border-radius: 20px;
+      padding: 25px;
+    }
 
-        .toast {
-            background: rgba(17, 24, 39, 0.9);
-            border-left: 4px solid var(--primary);
-            border-radius: 8px;
-            padding: 1rem 1.5rem;
-            color: var(--text-main);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            min-width: 300px;
-            animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            backdrop-filter: blur(10px);
-        }
+    .arch-diagram {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 40px 10px;
+      position: relative;
+    }
 
-        .toast.success {
-            border-left-color: var(--success);
-        }
+    .arch-diagram::before {
+      content: "";
+      position: absolute;
+      top: 50%;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary), var(--accent));
+      z-index: 1;
+    }
 
-        .toast.error {
-            border-left-color: var(--danger);
-        }
+    .arch-node {
+      position: relative;
+      z-index: 2;
+      width: 130px;
+      height: 130px;
+      background: #ffffff;
+      border: 2px solid var(--primary);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.08);
+      cursor: pointer;
+      transition: var(--transition);
+    }
 
-        /* Animations */
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
+    .arch-node:hover {
+      transform: scale(1.08);
+      box-shadow: 0 15px 30px var(--primary-glow);
+    }
 
-        @keyframes pulse {
-            to { opacity: 0.4; }
-        }
+    .arch-node.secondary {
+      border-color: var(--secondary);
+      box-shadow: 0 10px 25px rgba(147, 51, 234, 0.08);
+    }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(4px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .arch-node.secondary:hover {
+      box-shadow: 0 15px 30px var(--secondary-glow);
+    }
 
-        @keyframes fadeInDown {
-            from { opacity: 0; transform: translateY(-20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+    .arch-node.accent {
+      border-color: var(--accent);
+      box-shadow: 0 10px 25px rgba(22, 163, 74, 0.08);
+    }
 
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-    </style>
+    .arch-node.accent:hover {
+      box-shadow: 0 15px 30px rgba(22, 163, 74, 0.2);
+    }
+
+    .node-icon {
+      font-size: 1.8rem;
+      margin-bottom: 6px;
+    }
+
+    .arch-desc-box {
+      flex: 0.7;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      border-radius: 20px;
+      padding: 25px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .arch-desc-title {
+      font-size: 1.4rem;
+      margin-bottom: 12px;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .arch-desc-text {
+      color: var(--text-muted);
+      line-height: 1.6;
+      font-size: 0.95rem;
+    }
+
+    /* SLIDE 4: INPUT & OUTPUT SCHEMAS */
+    .schema-left {
+      flex: 0.7;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .schema-btn {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      border-radius: 12px;
+      padding: 15px;
+      text-align: left;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.01);
+    }
+
+    .schema-btn.active {
+      background: rgba(79, 70, 229, 0.05);
+      border-color: var(--primary);
+      box-shadow: 0 4px 15px rgba(79, 70, 229, 0.08);
+    }
+
+    .schema-btn-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: var(--text-muted);
+      transition: var(--transition);
+    }
+
+    .schema-btn.active .schema-btn-icon {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .schema-btn-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+    }
+
+    .schema-btn-desc {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .schema-right {
+      flex: 1.3;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.04);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+    }
+
+    .schema-table-wrapper {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    .schema-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.85rem;
+    }
+
+    .schema-table th {
+      color: var(--text-muted);
+      font-weight: 600;
+      padding: 10px 15px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+      font-family: var(--font-title);
+    }
+
+    .schema-table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    }
+
+    .schema-table tbody tr:hover {
+      background: rgba(0, 0, 0, 0.01);
+    }
+
+    .col-name {
+      font-family: monospace;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .col-type {
+      font-family: monospace;
+      color: var(--secondary);
+    }
+
+    /* SLIDE 5: INTERACTIVE GRAFANA MOCKUP */
+    .dashboard-layout {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dashboard-header {
+      background: #f1f5f9;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      padding: 6px 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .dashboard-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.1rem;
+      font-family: var(--font-title);
+    }
+
+    .dashboard-logo-icon {
+      color: #f97316; /* Grafana orange */
+    }
+
+    .grafana-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 12px;
+      flex: 1;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .grafana-col-left {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .grafana-kpi-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .grafana-panel {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      border-radius: 12px;
+      padding: 10px 15px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+    }
+
+    .kpi-card-real {
+      height: 80px;
+      justify-content: center;
+    }
+
+    .panel-title-real {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin-bottom: 5px;
+      font-family: var(--font-title);
+    }
+
+    .panel-value-real {
+      font-size: 1.8rem;
+      font-weight: 800;
+      font-family: var(--font-title);
+    }
+
+    .red-text {
+      color: #dc2626;
+      text-shadow: none;
+    }
+
+    .green-text {
+      color: #16a34a;
+      text-shadow: none;
+    }
+
+    .pie-chart-panel {
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .pie-chart-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      flex: 1;
+      gap: 15px;
+    }
+
+    .pie-chart-svg-wrapper {
+      width: 100px;
+      height: 100px;
+    }
+
+    .pie-svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg); /* align top start */
+    }
+
+    .pie-legend {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.7rem;
+      color: var(--text-main);
+    }
+
+    .legend-color {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      display: inline-block;
+    }
+
+    .yellow-bg {
+      background-color: #d97706;
+    }
+
+    .green-bg {
+      background-color: #22c55e;
+    }
+
+    .grafana-col-right {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .bar-chart-panel {
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .bar-chart-real-container {
+      display: flex;
+      flex: 1;
+      position: relative;
+      margin-top: 10px;
+      gap: 10px;
+    }
+
+    .chart-y-axis {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      width: 30px;
+      text-align: right;
+      padding-bottom: 20px;
+    }
+
+    .chart-bars-real {
+      display: flex;
+      flex: 1;
+      justify-content: space-around;
+      align-items: flex-end;
+      border-left: 1px solid rgba(0,0,0,0.08);
+      border-bottom: 1px solid rgba(0,0,0,0.08);
+      padding-bottom: 5px;
+      padding-left: 5px;
+    }
+
+    .bar-group-real {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      flex: 1;
+      max-width: 50px;
+    }
+
+    .bar-val-real {
+      font-size: 0.65rem;
+      color: var(--text-main);
+      margin-bottom: 2px;
+    }
+
+    .bar-container-real {
+      width: 100%;
+      height: 80px;
+      background: rgba(0,0,0,0.02);
+      position: relative;
+      border-radius: 2px;
+    }
+
+    .bar-fill-real {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: #22c55e; /* green bars matching image */
+      border-radius: 2px;
+      transition: height 1.2s ease-out;
+    }
+
+    .bar-label-real {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .bar-legend-real {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      margin-top: 5px;
+      justify-content: center;
+    }
+
+    .line-chart-panel {
+      flex: 1;
+      justify-content: space-between;
+    }
+
+    .line-chart-real-container {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      position: relative;
+      margin-top: 10px;
+      justify-content: center;
+    }
+
+    .line-chart-svg {
+      width: 100%;
+      height: 80px;
+    }
+
+    .line-chart-x-axis {
+      display: flex;
+      justify-content: space-between;
+      padding: 0 15px;
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      margin-top: 5px;
+    }
+
+    .line-legend-real {
+      display: flex;
+      gap: 15px;
+      font-size: 0.7rem;
+      justify-content: center;
+      margin-top: 5px;
+    }
+
+    /* SLIDE 6: SUMMARY & OUTCOME */
+    .outcome-card {
+      flex: 1;
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.05);
+      border-radius: 20px;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      justify-content: center;
+      transition: var(--transition);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.01);
+    }
+
+    .outcome-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--primary);
+      box-shadow: 0 10px 25px rgba(79, 70, 229, 0.06);
+    }
+
+    .outcome-card.purple:hover { 
+      border-color: var(--secondary);
+      box-shadow: 0 10px 25px rgba(147, 51, 234, 0.06);
+    }
+    
+    .outcome-card.green:hover { 
+      border-color: var(--accent);
+      box-shadow: 0 10px 25px rgba(22, 163, 74, 0.06);
+    }
+
+    .outcome-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 20px;
+      background: rgba(79, 70, 229, 0.06);
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+    }
+
+    .outcome-card.purple .outcome-icon {
+      background: rgba(147, 51, 234, 0.06);
+      color: var(--secondary);
+    }
+
+    .outcome-card.green .outcome-icon {
+      background: rgba(22, 163, 74, 0.06);
+      color: var(--accent);
+    }
+
+    .outcome-title {
+      font-size: 1.25rem;
+      margin-bottom: 12px;
+    }
+
+    .outcome-desc {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* TOAST & SPINNER KEYFRAMES FOR INTERACTIVE SLIDE */
+    .spinner {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #ffffff;
+      animation: spin 0.8s linear infinite;
+      display: none;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    @keyframes pulse {
+      to { opacity: 0.4; }
+    }
+    @keyframes slideInRight {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+    .toast-container {
+      position: fixed;
+      bottom: 90px;
+      right: 30px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .toast {
+      background: rgba(15, 23, 42, 0.95);
+      border-left: 4px solid var(--primary);
+      border-radius: 12px;
+      padding: 12px 20px;
+      color: #ffffff;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      font-weight: 500;
+      min-width: 300px;
+      animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      backdrop-filter: blur(10px);
+    }
+    .toast.success {
+      border-left-color: var(--accent);
+    }
+    .toast.error {
+      border-left-color: var(--danger);
+    }
+
+    /* Controls form overrides for light slide theme */
+    .glass-card-ingest input[type="text"], 
+    .glass-card-ingest input[type="number"], 
+    .glass-card-ingest select {
+      background: #ffffff;
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+      width: 100%;
+    }
+    .glass-card-ingest input[type="text"]:focus, 
+    .glass-card-ingest input[type="number"]:focus, 
+    .glass-card-ingest select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.12);
+    }
+
+    .console-log-entry {
+      margin-bottom: 5px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .console-log-entry.timestamp {
+      color: #64748b;
+      font-size: 0.7rem;
+    }
+    .console-log-entry.error {
+      color: #f87171;
+    }
+    .console-log-entry.info {
+      color: #38bdf8;
+    }
+    .console-log-entry.json {
+      color: #cbd5e1;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 8px;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      margin-top: 3px;
+      border-left: 2px solid #a78bfa;
+    }
+    
+    .status-badge.running .status-dot {
+      background: #f59e0b !important;
+      box-shadow: 0 0 8px #f59e0b;
+      animation: pulse 1s infinite alternate;
+    }
+    .status-badge.success .status-dot {
+      background: #22c55e !important;
+      box-shadow: 0 0 8px #22c55e;
+    }
+    .status-badge.error .status-dot {
+      background: #ef4444 !important;
+      box-shadow: 0 0 8px #ef4444;
+    }
+  </style>
 </head>
 <body>
-    <div class="ambient-glow"></div>
-    <div class="ambient-glow-2"></div>
 
-    <header>
-        <h1>RECRUITMENT PIPELINE CONTROLLER</h1>
-        <p>Mock Event Ingestion & Automated Spark ETL Trigger</p>
-    </header>
+  <!-- DECK SLIDE CONTAINER -->
+  <div id="deck-container">
+    
+    <!-- SLIDE 1: WELCOME SLIDE -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">Dự Án Data Engineering</div>
+        </div>
+        <div class="slide-subtitle">Trình bày báo cáo dự án | Thời lượng: 1.5 Phút</div>
+      </div>
+      
+      <div class="slide-content">
+        <div class="welcome-left">
+          <h1 class="welcome-title">ETL Pipeline<br><span class="gradient-text">Recruitment Marketing</span></h1>
+          <p class="welcome-desc">
+            Xây dựng hệ thống tự động hóa xử lý và trực quan hóa dữ liệu tương tác quảng cáo tin tuyển dụng thời gian thực sử dụng PySpark, Cassandra và MySQL.
+          </p>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 1 / 6</div>
+        <div>Nhấn [Space] hoặc các mũi tên để điều khiển</div>
+      </div>
+    </div>
 
-    <main class="container">
-        <!-- Event Ingestion Form -->
-        <section class="glass-card">
-            <div class="card-title">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
-                Send Tracking Event
+    <!-- SLIDE 2: THE CHALLENGE -->
+    <div class="slide" id="slide-2">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">S - Situation (Bối cảnh)</div>
+          <h2 class="slide-title">Vấn đề đặt ra & Thách thức</h2>
+        </div>
+      </div>
+      
+      <div class="slide-content">
+        <div class="problem-box">
+          <div class="problem-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            <h3>Tình trạng dữ liệu thô (Cassandra Log)</h3>
+          </div>
+          <ul class="problem-points">
+            <li>Dữ liệu tương tác ứng viên (click, apply...) lưu dạng log thô trong Cassandra.</li>
+            <li>Dữ liệu phi cấu trúc, khối lượng lớn, truy vấn trực tiếp chậm và gây quá tải.</li>
+            <li>Chưa liên kết được với thông tin chi tiết (metadata) của job/campaign.</li>
+          </ul>
+          <div class="slide-subtitle" style="color: #f87171;">Hệ quả: Các quyết định tối ưu ngân sách quảng cáo cảm tính, thiếu cơ sở dữ liệu.</div>
+        </div>
+
+        <div class="target-box">
+          <div class="target-header">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+            <h3>Yêu cầu Nghiệp vụ (Task)</h3>
+          </div>
+          <ul class="target-points">
+            <li>Đo lường chính xác hiệu suất tuyển dụng của từng Job và Campaign.</li>
+            <li>Xếp hạng hiệu quả chuyển đổi thực tế từ các nguồn quảng cáo (Publishers).</li>
+            <li>Cập nhật báo cáo tự động (Near Real-time) trực quan hóa trên Dashboard.</li>
+          </ul>
+          <div class="slide-subtitle" style="color: #4ade80;">Mục tiêu: Đưa ra quyết định chi tiêu ngân sách quảng cáo tối ưu dựa trên dữ liệu thực.</div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 2 / 6</div>
+        <div>Hệ thống ETL Recruitment Marketing</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3: PROCESS WORKFLOW -->
+    <div class="slide" id="slide-3">
+      <div class="slide-header">
+        <div class="slide-title-area" style="flex-direction: column; align-items: flex-start; gap: 4px; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="slide-badge">A - Action (Hành động)</div>
+            <h2 class="slide-title">Kiến Trúc ETL 3 Bước</h2>
+          </div>
+          <div class="slide-subtitle">Triển khai trên Docker (giả lập Azure Functions & Databases) | Tự động kích hoạt mỗi 3 phút</div>
+        </div>
+      </div>
+      
+      <div class="slide-content" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <!-- Column 1: Extract -->
+        <div class="outcome-card" style="padding: 24px; justify-content: flex-start; text-align: left; align-items: flex-start;">
+          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">📥</div>
+          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--primary); margin-bottom: 4px;">1. EXTRACT</h3>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">Incremental Load</div>
+          <p class="outcome-desc" style="font-size: 0.82rem; line-height: 1.5; text-align: left; margin: 0;">
+            • Điều phối: <b>Azure Function</b> (mỗi 3 phút).<br>
+            • Cơ chế: <b>Incremental (CDC)</b> qua mốc <code>updated_at</code>.<br>
+            • Tối ưu: Chỉ quét bản ghi mới từ <b>Cassandra</b>, tránh quét toàn bảng.
+          </p>
+        </div>
+
+        <!-- Column 2: Transform -->
+        <div class="outcome-card purple" style="padding: 24px; justify-content: flex-start; text-align: left; align-items: flex-start;">
+          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">⚙️</div>
+          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--secondary); margin-bottom: 4px;">2. TRANSFORM</h3>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">PySpark Aggregation</div>
+          <p class="outcome-desc" style="font-size: 0.82rem; line-height: 1.5; text-align: left; margin: 0;">
+            • Xử lý: Phân tích và tính toán song song clicks, conversions, qualified, unqualified.<br>
+            • Gom nhóm (<b>Aggregation</b>) đa chiều theo giờ.<br>
+            • Làm giàu dữ liệu (<b>Left Join</b>) với siêu dữ liệu Job trong MySQL.
+          </p>
+        </div>
+
+        <!-- Column 3: Load -->
+        <div class="outcome-card green" style="padding: 24px; justify-content: flex-start; text-align: left; align-items: flex-start;">
+          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">📤</div>
+          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--accent); margin-bottom: 4px;">3. LOAD</h3>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">MySQL & Grafana</div>
+          <p class="outcome-desc" style="font-size: 0.82rem; line-height: 1.5; text-align: left; margin: 0;">
+            • Ghi nhận: Nạp dữ liệu vào MySQL <code>events</code> qua <b>Spark JDBC</b>.<br>
+            • Chế độ: <b>Append</b> hiệu năng cao để ghi nhận liên tục.<br>
+            • Báo cáo: <b>Grafana</b> liên tục truy vấn MySQL để hiển thị trực quan.
+          </p>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 3 / 6</div>
+        <div>Xử lý phân tán song song PySpark</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4: INPUT & OUTPUT SCHEMAS -->
+    <div class="slide" id="slide-4">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">Luồng dữ liệu (Input & Output)</div>
+          <h2 class="slide-title">Cấu Trúc Các Bảng Dữ Liệu</h2>
+        </div>
+      </div>
+      
+      <div class="slide-content">
+        <div class="schema-left">
+          <div class="schema-btn active" onclick="switchSchema('cassandra')">
+            <div class="schema-btn-icon" style="background: #1287B1 !important; color: white !important; padding: 6px;">
+              <svg width="24" height="24" viewBox="0 0 120 120" style="display: block; width: 100%; height: 100%;">
+                <path d="M10 60C10 60 30 25 60 25C90 25 110 60 110 60C110 60 90 95 60 95C30 95 10 60 10 60Z" fill="#ffffff"/>
+                <circle cx="60" cy="60" r="22" fill="#1287B1"/>
+                <circle cx="60" cy="60" r="11" fill="#ffffff"/>
+                <circle cx="64" cy="56" r="4" fill="#1287B1"/>
+              </svg>
             </div>
-            
-            <form id="ingestionForm">
-                <div class="form-group">
-                    <label for="api_url">API Endpoint URL</label>
-                    <input type="text" id="api_url" name="api_url" required placeholder="e.g., http://localhost:8082/api/track">
+            <div>
+              <div class="schema-btn-title">Cassandra Source Table</div>
+              <div class="schema-btn-desc">recruitment.tracking (Input Log)</div>
+            </div>
+          </div>
+          
+          <div class="schema-btn" onclick="switchSchema('mysql_events')">
+            <div class="schema-btn-icon" style="background: #00758F !important; color: white !important; padding: 6px;">
+              <svg width="24" height="24" viewBox="0 0 120 120" style="display: block; width: 100%; height: 100%;">
+                <path d="M85 25C70 20 52 28 45 38C38 48 35 60 40 72C42 76 39 82 32 85C48 88 58 80 62 74C78 72 88 58 90 45C92 32 90 26 85 25Z" fill="#F29111"/>
+                <path d="M78 20C65 15 48 22 42 32C35 42 32 55 38 68C22 72 15 85 10 95C28 92 38 82 42 76C58 74 72 60 75 45C78 30 82 22 78 20Z" fill="#ffffff"/>
+              </svg>
+            </div>
+            <div>
+              <div class="schema-btn-title">MySQL Destination Table</div>
+              <div class="schema-btn-desc">events (Aggregated Output)</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="schema-right">
+          <div class="schema-table-wrapper">
+            <table class="schema-table" id="schema-table-content">
+              <thead>
+                <tr>
+                  <th>Tên cột</th>
+                  <th>Kiểu dữ liệu</th>
+                  <th>Mô tả chức năng</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Dynamic Content insertion based on selection -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 4 / 6</div>
+        <div>Cấu trúc dữ liệu Hệ thống ETL</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5: INTERACTIVE DASHBOARD -->
+    <div class="slide" id="slide-5">
+      <div class="slide-header">
+        <div class="slide-title-area" style="flex-direction: column; align-items: flex-start; gap: 4px; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div class="slide-badge">Trực quan hóa</div>
+            <h2 class="slide-title">Bảng Dashboard Trực Quan Hóa Thực Tế</h2>
+          </div>
+          <div class="slide-subtitle">Trực quan hóa thời gian thực (Near Real-time) trên Grafana — ảnh chụp từ hệ thống thực tế</div>
+        </div>
+      </div>
+      
+      <div class="slide-content" style="display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 16px; border: 1px solid rgba(0, 0, 0, 0.06); background: #f8fafc; padding: 0;">
+        <img 
+          src="../doc/grafana_dashboard.png" 
+          onerror="this.onerror=null; this.src='doc/grafana_dashboard.png';"
+          alt="Grafana Dashboard Screenshot" 
+          style="width: 100%; height: 100%; object-fit: contain; border-radius: 16px; display: block;"
+        />
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 5 / 6</div>
+        <div>Mô phỏng Grafana Dashboard tích hợp MySQL</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6: RESULT & OUTCOME -->
+    <div class="slide" id="slide-6">
+      <div class="slide-header">
+        <div class="slide-title-area">
+          <div class="slide-badge">R - Result (Kết quả)</div>
+          <h2 class="slide-title">Kết quả Đạt được & Tác động doanh nghiệp</h2>
+        </div>
+      </div>
+      
+      <div class="slide-content" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+        <div class="outcome-card">
+          <div class="outcome-icon">⏱️</div>
+          <h3 class="outcome-title">Báo Cáo Tức Thì</h3>
+          <p class="outcome-desc">Thời gian cập nhật dữ liệu báo cáo giảm từ hàng ngày xuống chỉ còn 3 phút. Dashboard hiển thị nhanh chỉ trong 2 giây.</p>
+        </div>
+        
+        <div class="outcome-card purple">
+          <div class="outcome-icon">🎯</div>
+          <h3 class="outcome-title">Tối Ưu Ngân Sách</h3>
+          <p class="outcome-desc">Phân tích rõ rệt tỷ lệ chuyển đổi hiệu quả của từng tin tuyển dụng, giúp dừng hoặc tăng ngân sách kịp thời.</p>
+        </div>
+        
+        <div class="outcome-card green">
+          <div class="outcome-icon">📈</div>
+          <h3 class="outcome-title">Đánh Giá Kênh</h3>
+          <p class="outcome-desc">Xếp hạng chính xác chất lượng ứng viên từ các nguồn cung cấp (Publishers), loại bỏ các kênh ảo thiếu hiệu quả.</p>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 6 / 6</div>
+        <div>Hoàn thành mục tiêu Data Pipeline</div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7: INTERACTIVE INGESTION & ETL CONTROLLER -->
+    <div class="slide" id="slide-7">
+      <div class="slide-header">
+        <div class="slide-title-area" style="flex-direction: column; align-items: flex-start; gap: 2px; width: 100%;">
+          <div style="display: flex; align-items: center; gap: 12px;">
+            <div class="slide-badge">Live Demo</div>
+            <h2 class="slide-title" style="font-size: 1.8rem;">Mô Phỏng Đẩy Dữ Liệu & ETL Trực Quan</h2>
+          </div>
+          <div class="slide-subtitle" style="font-size: 0.85rem;">Giao diện giả lập client đẩy sự kiện qua HTTP POST API và kích hoạt ETL nền</div>
+        </div>
+      </div>
+      
+      <div class="slide-content" style="display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; overflow: hidden;">
+        <!-- Ingestion Form Card -->
+        <div style="background: rgba(79, 70, 229, 0.02); border: 1px solid rgba(79, 70, 229, 0.1); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; overflow-y: auto;">
+            <form id="ingestionForm" style="display: flex; flex-direction: column; gap: 8px;">
+                <div>
+                    <label for="api_url" style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em;">API Endpoint URL</label>
+                    <input type="text" id="api_url" name="api_url" required placeholder="e.g., http://localhost:8082/api/track" style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:7px 10px;font-size:0.85rem;color:var(--text-main);font-family:inherit;outline:none;width:100%;">
                 </div>
 
-                <div class="form-group">
-                    <label for="custom_track">Event Action (custom_track)</label>
-                    <select id="custom_track" name="custom_track" required>
+                <div>
+                    <label for="custom_track" style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em;">Event Action (custom_track)</label>
+                    <select id="custom_track" name="custom_track" required style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:7px 10px;font-size:0.85rem;color:var(--text-main);font-family:inherit;outline:none;width:100%;">
                         <option value="click">Click (Quảng cáo / Tin tuyển dụng)</option>
                         <option value="conversion">Conversion (Ứng tuyển hồ sơ)</option>
                         <option value="qualified">Qualified (Ứng tuyển đạt chuẩn)</option>
@@ -471,10 +1351,10 @@
                     </select>
                 </div>
 
-                <div class="form-group-row">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div>
-                        <label for="job_id">Job ID</label>
-                        <select id="job_id" name="job_id" required>
+                        <label for="job_id" style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em;">Job ID</label>
+                        <select id="job_id" name="job_id" required style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:7px 10px;font-size:0.85rem;color:var(--text-main);font-family:inherit;outline:none;width:100%;">
                             <option value="1">Job 1 (Python Dev)</option>
                             <option value="2">Job 2 (Java Dev)</option>
                             <option value="3">Job 3 (Data Engineer)</option>
@@ -483,8 +1363,8 @@
                         </select>
                     </div>
                     <div>
-                        <label for="publisher_id">Publisher ID</label>
-                        <select id="publisher_id" name="publisher_id" required>
+                        <label for="publisher_id" style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em;">Publisher ID</label>
+                        <select id="publisher_id" name="publisher_id" required style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:7px 10px;font-size:0.85rem;color:var(--text-main);font-family:inherit;outline:none;width:100%;">
                             <option value="1">Publisher 1 (Facebook Ads)</option>
                             <option value="2">Publisher 2 (Google Jobs)</option>
                             <option value="3">Publisher 3 (LinkedIn)</option>
@@ -494,18 +1374,18 @@
                     </div>
                 </div>
 
-                <div class="form-group-row">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
                     <div>
-                        <label for="campaign_id">Campaign ID</label>
-                        <select id="campaign_id" name="campaign_id" required>
+                        <label for="campaign_id" style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em;">Campaign ID</label>
+                        <select id="campaign_id" name="campaign_id" required style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:7px 10px;font-size:0.85rem;color:var(--text-main);font-family:inherit;outline:none;width:100%;">
                             <option value="10">Campaign 10 (Tech Recruit 2026)</option>
                             <option value="11">Campaign 11 (Summer Internship)</option>
-                            <option value="12">Campaign 12 (Direct Publisher Direct)</option>
+                            <option value="12">Campaign 12 (Direct Publisher)</option>
                         </select>
                     </div>
                     <div>
-                        <label for="group_id">Group ID</label>
-                        <select id="group_id" name="group_id">
+                        <label for="group_id" style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em;">Group ID</label>
+                        <select id="group_id" name="group_id" style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:7px 10px;font-size:0.85rem;color:var(--text-main);font-family:inherit;outline:none;width:100%;">
                             <option value="20">Group 20 (Software Team)</option>
                             <option value="21">Group 21 (Data Team)</option>
                             <option value="22">Group 22 (Design Team)</option>
@@ -514,210 +1394,451 @@
                     </div>
                 </div>
 
-                <div class="form-group" id="bidGroup">
-                    <label for="bid">Advertising Bid (USD)</label>
-                    <input type="number" id="bid" name="bid" value="1.50" min="0.00" max="100.00" step="0.01">
+                <div id="bidGroup">
+                    <label for="bid" style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); display: block; margin-bottom: 3px; text-transform: uppercase; letter-spacing: 0.04em;">Advertising Bid (USD)</label>
+                    <input type="number" id="bid" name="bid" value="1.50" min="0.00" max="100.00" step="0.01" style="background:#fff;border:1px solid rgba(0,0,0,0.1);border-radius:8px;padding:7px 10px;font-size:0.85rem;color:var(--text-main);font-family:inherit;outline:none;width:100%;">
                 </div>
 
-                <button type="submit" id="btnSubmit" class="btn-submit">
+                <button type="submit" id="btnSubmit" style="width:100%;background:linear-gradient(90deg,var(--primary) 0%,var(--secondary) 100%);border:none;border-radius:10px;padding:10px;color:#fff;font-size:0.9rem;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;">
                     <span class="spinner" id="spinner"></span>
                     <span id="btnText">Send Event & Trigger ETL</span>
                 </button>
             </form>
-        </section>
+        </div>
 
-        <!-- Response & System Logs Panel -->
-        <section class="glass-card console-card">
-            <div class="console-container">
-                <div class="console-header">
-                    <div class="card-title" style="margin-bottom: 0;">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 12H4v-2h8v2zm8-4H4V8h16v4z"/></svg>
-                        API Response Logs
-                    </div>
-                    <div class="status-container" style="display: flex; align-items: center; gap: 1rem;">
-                        <button class="console-clear-btn" id="btnClearConsole">Clear Logs</button>
-                        <div class="status-badge idle" id="statusBadge">
-                            <span class="status-dot"></span>
-                            <span id="statusText">IDLE</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="console-window" id="consoleWindow">
-                    <div class="console-placeholder" id="consolePlaceholder">
-                        No logs recorded yet. Send an event to trigger the pipeline and view logs.
+        <!-- System Response Logs Panel -->
+        <div style="background:#090d16;border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:16px;display:flex;flex-direction:column;overflow:hidden;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-shrink:0;">
+                <h4 style="font-size:0.85rem;color:#fff;display:flex;align-items:center;gap:6px;font-weight:700;">
+                    <svg width="16" height="16" fill="var(--primary)" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-8 12H4v-2h8v2zm8-4H4V8h16v4z"/></svg>
+                    API Response Logs
+                </h4>
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <button id="btnClearConsole" style="background:none;border:none;color:#94a3b8;font-size:0.7rem;cursor:pointer;">Clear Logs</button>
+                    <div class="status-badge idle" id="statusBadge" style="display:flex;align-items:center;gap:5px;font-size:0.7rem;color:#94a3b8;">
+                        <span class="status-dot" style="width:6px;height:6px;border-radius:50%;background:#94a3b8;display:inline-block;"></span>
+                        <span id="statusText">IDLE</span>
                     </div>
                 </div>
             </div>
-        </section>
-    </main>
+            
+            <div class="console-window" id="consoleWindow" style="flex:1;min-height:0;background:#020617;border-radius:10px;padding:12px;font-family:'JetBrains Mono',monospace;font-size:0.72rem;line-height:1.45;color:#10b981;overflow-y:auto;text-align:left;">
+                <div class="console-placeholder" id="consolePlaceholder" style="color:#475569;">
+                    No logs recorded yet. Send an event to trigger the pipeline and view logs.
+                </div>
+            </div>
+        </div>
+      </div>
+      
+      <div class="slide-footer">
+        <div>Khung STAR - Thuyết trình Slide 7 / 7 (Live Demo)</div>
+        <div>Hệ thống ETL Recruitment Marketing</div>
+      </div>
+    </div>
 
-    <div class="toast-container" id="toastContainer"></div>
+  </div>
 
-    <script>
-        const ingestionForm = document.getElementById('ingestionForm');
-        const apiUrlInput = document.getElementById('api_url');
-        const customTrackSelect = document.getElementById('custom_track');
-        const bidGroup = document.getElementById('bidGroup');
-        const btnSubmit = document.getElementById('btnSubmit');
-        const spinner = document.getElementById('spinner');
-        const btnText = document.getElementById('btnText');
-        const statusBadge = document.getElementById('statusBadge');
-        const statusText = document.getElementById('statusText');
-        const consoleWindow = document.getElementById('consoleWindow');
-        const consolePlaceholder = document.getElementById('consolePlaceholder');
-        const btnClearConsole = document.getElementById('btnClearConsole');
-        const toastContainer = document.getElementById('toastContainer');
+  <!-- SLIDE DECK CONTROL BAR -->
+  <div id="nav-controls">
+    <div class="nav-btn-group">
+      <button class="nav-btn" id="prev-btn" onclick="prevSlide()" disabled>
+        ← Trước
+      </button>
+      <button class="nav-btn" id="next-btn" onclick="nextSlide()">
+        Tiếp Theo →
+      </button>
+    </div>
+    
+    <div id="progress-container">
+      <div id="progress-bar"></div>
+    </div>
+    
+    <div id="slide-indicator">Slide 1 / 7</div>
+  </div>
 
-        // Toggle Bid visibility based on event type
-        customTrackSelect.addEventListener('change', function() {
-            if (this.value === 'click') {
-                bidGroup.style.display = 'block';
-            } else {
-                bidGroup.style.display = 'none';
-            }
-        });
+  <div class="toast-container" id="toastContainer"></div>
 
-        // Auto-detect and configure default API URL
-        let defaultHost = 'http://159.223.41.98:8082'; // Default to Production Server IP
+  <script>
+    /* SCHEMA DEFINITIONS DATA */
+    const schemaData = {
+      cassandra: [
+        { name: "create_time", type: "TEXT (UUIDv1)", desc: "Khóa chính tự sinh dạng TimeUUID để phân giải thời gian sự kiện" },
+        { name: "bid", type: "INT", desc: "Đơn giá thầu của tin tuyển dụng tại thời điểm tương tác" },
+        { name: "campaign_id", type: "INT", desc: "Mã chiến dịch marketing liên kết" },
+        { name: "custom_track", type: "TEXT", desc: "Loại tương tác của người dùng: 'click', 'conversion', 'qualified', 'unqualified'" },
+        { name: "group_id", type: "INT", desc: "Mã nhóm tin tuyển dụng" },
+        { name: "job_id", type: "INT", desc: "Mã tin tuyển dụng" },
+        { name: "publisher_id", type: "INT", desc: "Mã nhà phân phối tin tuyển dụng phát sinh click" },
+        { name: "ts", type: "TEXT", desc: "Mốc thời gian định dạng chuẩn yyyy-MM-dd HH:mm:ss" }
+      ],
+      mysql_events: [
+        { name: "id", type: "INT (Auto_Inc)", desc: "Khóa chính tự tăng" },
+        { name: "job_id", type: "INT", desc: "Mã tin tuyển dụng được liên kết" },
+        { name: "dates", type: "DATE", desc: "Ngày ghi nhận dữ liệu đã tổng hợp" },
+        { name: "hours", type: "INT", desc: "Khung giờ tổng hợp (0 - 23h)" },
+        { name: "clicks", type: "INT", desc: "Tổng số lượt nhấp chuột trong khung giờ" },
+        { name: "conversion", type: "INT", desc: "Tổng số lượt nộp hồ sơ thành công" },
+        { name: "qualified_application", type: "INT", desc: "Tổng số hồ sơ được đánh giá đạt tiêu chuẩn" },
+        { name: "disqualified_application", type: "INT", desc: "Tổng số hồ sơ bị đánh giá không đạt tiêu chuẩn" },
+        { name: "bid_set", type: "DECIMAL(10,2)", desc: "Đơn giá thầu trung bình trong khung giờ" },
+        { name: "spend_hour", type: "DECIMAL(10,2)", desc: "Tổng chi phí tiêu tốn = Clicks * Bid_set" },
+        { name: "company_id", type: "INT", desc: "Mã công ty (được làm giàu qua Join bảng Job)" },
+        { name: "publisher_id", type: "INT", desc: "Mã nguồn tuyển dụng" },
+        { name: "campaign_id", type: "INT", desc: "Mã chiến dịch quảng cáo" },
+        { name: "updated_at", type: "TIMESTAMP", desc: "Mốc thời gian đồng bộ cuối cùng của loạt dữ liệu" }
+      ]
+    };
+
+    /* ARCHITECTURE DETAIL PANEL DATA */
+    const archDetails = {
+      extract: {
+        title: "📥 Bước 1: Extract (Trích xuất gia tăng)",
+        text: "Sử dụng mốc thời gian đồng bộ lớn nhất (updated_at) trong MySQL làm ngưỡng lọc. PySpark trích xuất dữ liệu từ bảng nguồn Cassandra bằng cách áp dụng TimeUUID Pushdown Filter để chỉ tải lên dữ liệu mới, tránh quét toàn bộ bảng (CDC)."
+      },
+      transform: {
+        title: "⚙️ Bước 2: Transform (Tổng hợp & Liên kết)",
+        text: "Sử dụng PySpark thực hiện làm sạch dữ liệu và tách các luồng để tính toán song song theo clicks, conversions, qualified, unqualified. Sau đó, gom nhóm (Group By) theo bộ khóa chung và thực hiện phép kết hợp (Left Join) với bảng Job trong MySQL để gán company_id tương ứng."
+      },
+      load: {
+        title: "📤 Bước 3: Load (Nạp dữ liệu & Trực quan)",
+        text: "Sử dụng Spark JDBC kết nối trực tiếp đến MySQL ở chế độ 'append' để ghi nhận dữ liệu đã được làm giàu vào bảng 'events'. Grafana Dashboard sẽ truy vấn liên tục bảng MySQL này để cập nhật trực quan hóa thời gian thực (Near Real-time)."
+      }
+    };
+
+    /* STATE VARIABLES */
+    let currentSlideIndex = 1;
+    const totalSlides = 7;
+
+    /* KEYBOARD & SCROLL HANDLERS */
+    document.addEventListener("keydown", (e) => {
+      // Prevent slide progression when typing in form inputs/selectors
+      if (document.activeElement.tagName === "INPUT" || document.activeElement.tagName === "SELECT") {
+        return;
+      }
+      if (e.code === "Space" || e.code === "ArrowRight") {
+        nextSlide();
+      } else if (e.code === "ArrowLeft") {
+        prevSlide();
+      }
+    });
+
+    /* FUNCTION NAVIGATION */
+    function updateControls() {
+      // Slides toggle
+      for (let i = 1; i <= totalSlides; i++) {
+        const slide = document.getElementById(`slide-${i}`);
+        if (i === currentSlideIndex) {
+          slide.classList.add("active");
+        } else {
+          slide.classList.remove("active");
+        }
+      }
+
+      // Progress bar
+      const progressPercent = ((currentSlideIndex - 1) / (totalSlides - 1)) * 100;
+      document.getElementById("progress-bar").style.width = `${progressPercent}%`;
+
+      // Buttons active/disable state
+      document.getElementById("prev-btn").disabled = currentSlideIndex === 1;
+      document.getElementById("next-btn").disabled = currentSlideIndex === totalSlides;
+      
+      // Indicators
+      document.getElementById("slide-indicator").textContent = `Slide ${currentSlideIndex} / ${totalSlides}`;
+
+      // Trigger animations for specific slides
+      if (currentSlideIndex === 5) {
+        animateDashboardMockup();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlideIndex < totalSlides) {
+        currentSlideIndex++;
+        updateControls();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlideIndex > 1) {
+        currentSlideIndex--;
+        updateControls();
+      }
+    }
+
+    /* ARCHITECTURE DETAIL SWITCHER */
+    function showArchDetails(step) {
+      const data = archDetails[step];
+      const panelTitle = document.getElementById("arch-desc-title");
+      const panelText = document.getElementById("arch-desc-text");
+      const panel = document.getElementById("arch-desc-panel");
+      
+      if (!panelTitle || !panelText || !panel) return;
+      
+      // Flash fade animation
+      panel.style.opacity = 0;
+      setTimeout(() => {
+        panelTitle.innerHTML = data.title;
+        panelText.innerHTML = data.text;
+        panel.style.opacity = 1;
+      }, 200);
+      
+      // Update nodes highlights
+      const nodes = document.querySelectorAll(".arch-node");
+      nodes.forEach(node => {
+        node.style.transform = "scale(1)";
+      });
+    }
+
+    /* SCHEMA SWITCHER */
+    function switchSchema(schemaKey) {
+      const buttons = document.querySelectorAll(".schema-btn");
+      buttons.forEach(btn => btn.classList.remove("active"));
+      
+      // Add active to selected button
+      const targetBtn = Array.from(buttons).find(btn => btn.getAttribute("onclick").includes(schemaKey));
+      if (targetBtn) targetBtn.classList.add("active");
+
+      // Load table entries
+      const list = schemaData[schemaKey];
+      const tbody = document.querySelector("#schema-table-content tbody");
+      tbody.innerHTML = ""; // Clear
+
+      list.forEach(col => {
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td class="col-name">${col.name}</td>
+          <td class="col-type">${col.type}</td>
+          <td>${col.desc}</td>
+        `;
+        tbody.appendChild(row);
+      });
+    }
+
+    /* REAL-TIME DASHBOARD SIMULATION */
+    let dashboardTimer = null;
+    function animateDashboardMockup() {
+      // Clear previous timer
+      if (dashboardTimer) clearInterval(dashboardTimer);
+      
+      const spendVal = document.getElementById("real-spend");
+      const convRateVal = document.getElementById("real-conversion");
+      
+      if (!spendVal || !convRateVal) return;
+      
+      let baseSpend = 1060.00;
+      let baseConvRate = 2.01;
+
+      // Animate Chart Bars
+      const bars = document.querySelectorAll(".bar-fill-real");
+      const heights = [87, 3, 1.5, 1.5, 2];
+      bars.forEach((bar, idx) => {
+        bar.style.height = "0%";
+        setTimeout(() => {
+          bar.style.height = `${heights[idx]}%`;
+        }, 100 * idx);
+      });
+
+      // Periodic Live updating simulation
+      dashboardTimer = setInterval(() => {
+        // Add random slight changes matching live traffic
+        const spendIncrease = Math.random() > 0.6 ? (Math.random() * 2 + 0.5) : 0;
+        const convRateShift = Math.random() > 0.7 ? (Math.random() * 0.04 - 0.02) : 0;
+
+        baseSpend += spendIncrease;
+        baseConvRate += convRateShift;
+
+        // format to $X.XXK
+        const spendFormatted = `$${(baseSpend / 1000).toFixed(2)}K`;
+        spendVal.textContent = spendFormatted;
         
-        // Only use current host/origin if the page is loaded directly from the container's UI endpoint
-        if (window.location.port === '8082' || window.location.pathname.includes('/api/')) {
-            if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-                defaultHost = 'http://localhost:8082';
-            } else {
-                defaultHost = window.location.origin;
-            }
+        convRateVal.textContent = `${baseConvRate.toFixed(2)}%`;
+
+        // Pulse briefly on update
+        if (spendIncrease > 0) {
+          spendVal.style.color = "#ff6b6b";
+          setTimeout(() => spendVal.style.color = "#ef4444", 400);
+        }
+        if (Math.abs(convRateShift) > 0) {
+          convRateVal.style.color = "#4ade80";
+          setTimeout(() => convRateVal.style.color = "#22c55e", 400);
+        }
+      }, 3000);
+    }
+
+    // Initialize Schema View & Controller setup on load
+    window.addEventListener("DOMContentLoaded", () => {
+      switchSchema("cassandra");
+      // Pre-warm details panel if it exists
+      if (document.getElementById("arch-desc-panel")) {
+        showArchDetails("extract");
+      }
+    });
+
+    /* ========================================================
+       LIVE DEMO CONTROLLER INGESTION SCRIPTS (SLIDE 7)
+       ======================================================== */
+    const ingestionForm = document.getElementById('ingestionForm');
+    const apiUrlInput = document.getElementById('api_url');
+    const customTrackSelect = document.getElementById('custom_track');
+    const bidGroup = document.getElementById('bidGroup');
+    const btnSubmit = document.getElementById('btnSubmit');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+    const statusBadge = document.getElementById('statusBadge');
+    const statusText = document.getElementById('statusText');
+    const consoleWindow = document.getElementById('consoleWindow');
+    const consolePlaceholder = document.getElementById('consolePlaceholder');
+    const btnClearConsole = document.getElementById('btnClearConsole');
+    const toastContainer = document.getElementById('toastContainer');
+
+    // Toggle Bid visibility based on event type
+    customTrackSelect.addEventListener('change', function() {
+        if (this.value === 'click') {
+            bidGroup.style.display = 'block';
+        } else {
+            bidGroup.style.display = 'none';
+        }
+    });
+
+    // Auto-detect and configure default API URL
+    let defaultHost = 'http://159.223.41.98:8082'; // Default to Production Server IP
+    
+    // Only use current host/origin if the page is loaded directly from the container's UI endpoint
+    if (window.location.port === '8082' || window.location.pathname.includes('/api/')) {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            defaultHost = 'http://localhost:8082';
+        } else {
+            defaultHost = window.location.origin;
+        }
+    }
+    
+    apiUrlInput.value = `${defaultHost}/api/track`;
+
+    // Clear console logs
+    btnClearConsole.addEventListener('click', function() {
+        consoleWindow.innerHTML = '';
+        consoleWindow.appendChild(consolePlaceholder);
+        consolePlaceholder.style.display = 'flex';
+    });
+
+    // Add log entry to console window
+    function log(message, type = 'normal') {
+        consolePlaceholder.style.display = 'none';
+        
+        const timestamp = new Date().toLocaleTimeString();
+        
+        const timeDiv = document.createElement('div');
+        timeDiv.className = 'console-log-entry timestamp';
+        timeDiv.innerText = `[${timestamp}]`;
+        
+        const contentDiv = document.createElement('div');
+        contentDiv.className = `console-log-entry ${type}`;
+        
+        if (type === 'json') {
+            contentDiv.innerText = JSON.stringify(message, null, 2);
+        } else {
+            contentDiv.innerText = message;
         }
         
-        apiUrlInput.value = `${defaultHost}/api/track`;
+        consoleWindow.appendChild(timeDiv);
+        consoleWindow.appendChild(contentDiv);
+        consoleWindow.scrollTop = consoleWindow.scrollHeight;
+    }
 
+    // Show Toast Notifications
+    function showToast(message, type = 'info') {
+        const toast = document.createElement('div');
+        toast.className = `toast ${type}`;
+        
+        let icon = '';
+        if (type === 'success') {
+            icon = '<svg width="18" height="18" fill="#16a34a" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>';
+        } else if (type === 'error') {
+            icon = '<svg width="18" height="18" fill="#dc2626" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
+        }
+        
+        toast.innerHTML = `${icon} <span>${message}</span>`;
+        toastContainer.appendChild(toast);
+        
+        setTimeout(() => {
+            toast.style.opacity = '0';
+            toast.style.transform = 'translateX(100%)';
+            toast.style.transition = 'all 0.3s ease';
+            setTimeout(() => toast.remove(), 300);
+        }, 4000);
+    }
 
-        // Clear console logs
-        btnClearConsole.addEventListener('click', function() {
-            consoleWindow.innerHTML = '';
-            consoleWindow.appendChild(consolePlaceholder);
-            consolePlaceholder.style.display = 'flex';
-        });
+    // Form Submit Handler
+    ingestionForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-        // Add log entry to console window
-        function log(message, type = 'normal') {
-            consolePlaceholder.style.display = 'none';
-            
-            const timestamp = new Date().toLocaleTimeString();
-            
-            const timeDiv = document.createElement('div');
-            timeDiv.className = 'console-log-entry timestamp';
-            timeDiv.innerText = `[${timestamp}]`;
-            
-            const contentDiv = document.createElement('div');
-            contentDiv.className = `console-log-entry ${type}`;
-            
-            if (type === 'json') {
-                contentDiv.innerText = JSON.stringify(message, null, 2);
+        // Set UI to loading state
+        btnSubmit.disabled = true;
+        spinner.style.display = 'inline-block';
+        btnText.innerText = 'Processing Ingestion & ETL...';
+        
+        statusBadge.className = 'status-badge running';
+        statusText.innerText = 'PROCESSING';
+
+        // Construct payload
+        const formData = new FormData(ingestionForm);
+        const payload = {
+            custom_track: formData.get('custom_track'),
+            job_id: parseInt(formData.get('job_id')),
+            publisher_id: parseInt(formData.get('publisher_id')),
+            campaign_id: parseInt(formData.get('campaign_id')),
+            group_id: formData.get('group_id') ? parseInt(formData.get('group_id')) : null,
+            bid: formData.get('custom_track') === 'click' ? parseFloat(formData.get('bid') || 0) : 0
+        };
+
+        const apiEndpoint = apiUrlInput.value.trim() || '/api/track';
+        log(`Sending Event Ingestion request to POST ${apiEndpoint}...`, 'info');
+        log(payload, 'json');
+
+        try {
+            // Call local Ingestion & ETL trigger API
+            const response = await fetch(apiEndpoint, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            });
+
+            let result = {};
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.includes("application/json")) {
+                result = await response.json();
             } else {
-                contentDiv.innerText = message;
+                const text = await response.text();
+                result = { status: "error", message: text || `HTTP Error ${response.status}` };
             }
-            
-            consoleWindow.appendChild(timeDiv);
-            consoleWindow.appendChild(contentDiv);
-            consoleWindow.scrollTop = consoleWindow.scrollHeight;
-        }
 
-        // Show Toast Notifications
-        function showToast(message, type = 'info') {
-            const toast = document.createElement('div');
-            toast.className = `toast ${type}`;
-            
-            let icon = '';
-            if (type === 'success') {
-                icon = '<svg width="18" height="18" fill="#10b981" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>';
-            } else if (type === 'error') {
-                icon = '<svg width="18" height="18" fill="#ef4444" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/></svg>';
-            }
-            
-            toast.innerHTML = `${icon} <span>${message}</span>`;
-            toastContainer.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.opacity = '0';
-                toast.style.transform = 'translateX(100%)';
-                toast.style.transition = 'all 0.3s ease';
-                setTimeout(() => toast.remove(), 300);
-            }, 4000);
-        }
-
-        // Form Submit Handler
-        ingestionForm.addEventListener('submit', async function(e) {
-            e.preventDefault();
-
-            // Set UI to loading state
-            btnSubmit.disabled = true;
-            spinner.style.display = 'inline-block';
-            btnText.innerText = 'Processing Ingestion & ETL...';
-            
-            statusBadge.className = 'status-badge running';
-            statusText.innerText = 'PROCESSING';
-
-            // Construct payload
-            const formData = new FormData(ingestionForm);
-            const payload = {
-                custom_track: formData.get('custom_track'),
-                job_id: parseInt(formData.get('job_id')),
-                publisher_id: parseInt(formData.get('publisher_id')),
-                campaign_id: parseInt(formData.get('campaign_id')),
-                group_id: formData.get('group_id') ? parseInt(formData.get('group_id')) : null,
-                bid: formData.get('custom_track') === 'click' ? parseFloat(formData.get('bid') || 0) : 0
-            };
-
-            const apiEndpoint = apiUrlInput.value.trim() || '/api/track';
-            log(`Sending Event Ingestion request to POST ${apiEndpoint}...`, 'info');
-            log(payload, 'json');
-
-            try {
-                // Call local Ingestion & ETL trigger API
-                const response = await fetch(apiEndpoint, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-
-                let result = {};
-                const contentType = response.headers.get("content-type");
-                if (contentType && contentType.includes("application/json")) {
-                    result = await response.json();
-                } else {
-                    const text = await response.text();
-                    result = { status: "error", message: text || `HTTP Error ${response.status}` };
-                }
-
-                if (response.ok) {
-                    statusBadge.className = 'status-badge success';
-                    statusText.innerText = 'SUCCESS';
-                    log(`API Success (HTTP ${response.status}): Event stored and ETL pipeline completed!`, 'info');
-                    log(result, 'json');
-                    showToast('Event ingested and ETL run complete!', 'success');
-                } else {
-                    statusBadge.className = 'status-badge error';
-                    statusText.innerText = 'ERROR';
-                    log(`API Failed (HTTP ${response.status}): ${result.message || result.error || 'Unknown error'}`, 'error');
-                    if (result.error) log(result.error, 'error');
-                    showToast('Event stored but ETL failed or returned an error.', 'error');
-                }
-            } catch (error) {
+            if (response.ok) {
+                statusBadge.className = 'status-badge success';
+                statusText.innerText = 'SUCCESS';
+                log(`API Success (HTTP ${response.status}): Event stored and ETL pipeline completed!`, 'info');
+                log(result, 'json');
+                showToast('Event ingested and ETL run complete!', 'success');
+            } else {
                 statusBadge.className = 'status-badge error';
                 statusText.innerText = 'ERROR';
-                log(`Network error: ${error.message}`, 'error');
-                showToast('Failed to connect to API server.', 'error');
-            } finally {
-                // Restore button state
-                btnSubmit.disabled = false;
-                spinner.style.display = 'none';
-                btnText.innerText = 'Send Event & Trigger ETL';
+                log(`API Failed (HTTP ${response.status}): ${result.message || result.error || 'Unknown error'}`, 'error');
+                if (result.error) log(result.error, 'error');
+                showToast('Event stored but ETL failed or returned an error.', 'error');
             }
-        });
-    </script>
+        } catch (error) {
+            statusBadge.className = 'status-badge error';
+            statusText.innerText = 'ERROR';
+            log(`Network error: ${error.message}`, 'error');
+            showToast('Failed to connect to API server.', 'error');
+        } finally {
+            // Restore button state
+            btnSubmit.disabled = false;
+            spinner.style.display = 'none';
+            btnText.innerText = 'Send Event & Trigger ETL';
+        }
+    });
+  </script>
 </body>
 </html>
