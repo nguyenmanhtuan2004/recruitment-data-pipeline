@@ -138,9 +138,10 @@ Bảng này lưu trữ thông tin về các nguồn cung cấp ứng viên/nhà 
 *   **Database Nguồn (NoSQL):** **Apache Cassandra 4.1** (Phù hợp ghi log tương tác tốc độ cao, phân tán).
 *   **Database Đích (RDBMS):** **MySQL 8.0** (Phù hợp lưu trữ dữ liệu có cấu trúc, phục vụ báo cáo/BI).
 *   **Công cụ xử lý dữ liệu lớn:** **Apache Spark 3.5.1** (PySpark) chạy phân tán để tính toán song song.
-*   **Hạ tầng Serverless:** **Azure Functions** (Timer Trigger) giúp tự động hóa lịch chạy và tối ưu hóa tài nguyên.
+*   **Hạ tầng Serverless:** **Azure Functions** (Timer Trigger & Queue Trigger) giúp tự động hóa lịch chạy và tối ưu hóa tài nguyên.
 *   **Trực quan hóa:** **Grafana** để thiết lập Dashboard KPI trực quan.
 *   **Điều phối container:** **Docker & Docker Compose** để đóng gói toàn bộ hệ thống phát triển cục bộ.
+*   **Hạ tầng đám mây (Cloud Deployment):** **DigitalOcean Droplet** (Ubuntu, 2 vCPU / 2GB RAM) để triển khai hệ thống lên môi trường Production thực tế.
 
 ---
 

@@ -109,11 +109,16 @@ python src/generate_dummy_data.py
 *Script này truy cập MySQL lấy thông tin Metadata (Jobs, Publishers), sau đó tạo dữ liệu thô và ghi thẳng vào Cassandra mỗi 30 giây.*
 
 #### Cách B: Sinh dữ liệu thông qua HTTP API (Gọi tới API `/api/track`)
-Chạy script để giả lập client liên tục bắn request HTTP POST chứa JSON payload tới API của Function App:
-```bash
-python src/generate_dummy_data_api.py
-```
-*Script này sẽ gọi tới `http://127.0.0.1:8082/api/track`, giúp kiểm tra tính năng xử lý bất đồng bộ (Lưu Cassandra -> Gửi Queue -> Kích hoạt Spark ETL ngầm).*
+Giả lập client liên tục bắn request HTTP POST chứa JSON payload tới API của Function App:
+*   **Nếu chạy ở máy cá nhân (Cục bộ):**
+    ```bash
+    python src/generate_dummy_data_api.py
+    ```
+*   **Nếu chạy trên Máy chủ Production (Docker exec qua PuTTY):**
+    ```bash
+    docker exec -it -e API_URL=http://127.0.0.1:80/api/track etl_function_app python /home/site/wwwroot/src/generate_dummy_data_api.py
+    ```
+*Script này sẽ gọi tới API, giúp kiểm tra tính năng xử lý bất đồng bộ (Lưu Cassandra -> Gửi Queue -> Kích hoạt Spark ETL ngầm).*
 
 ### Bước 5: Quan sát tiến trình ETL hoạt động
 *   Theo lịch trình mặc định, **Azure Function** sẽ thức dậy mỗi **5 phút** một lần để chạy tiến trình ETL PySpark.
@@ -150,7 +155,7 @@ Sau khi hệ thống được deploy thành công lên server cloud (DigitalOcea
 Hệ thống hỗ trợ 2 giao diện để theo dõi và kiểm tra dữ liệu:
 1. **Grafana Dashboard (Theo dõi KPI tổng hợp):**
    * **URL:** `http://159.223.41.98:3000`
-   * **Đăng nhập:** Tài khoản mặc định là `admin`/`admin` (hoặc mật khẩu mới bạn đã cập nhật).
+   * **Đăng nhập:** Tài khoản mặc định là `admin`/`Tu@nloc00` (hoặc mật khẩu mới bạn đã cập nhật).
    * **Cách xem dữ liệu thay đổi:** Nhấp vào nút **Refresh** (vòng xoay) ở góc trên bên phải, hoặc chọn mốc thời gian xem là **Last 5 years** (để bao quát dữ liệu mới năm 2026 và dữ liệu mẫu năm 2022).
 2. **Interactive Web UI (Giao diện giả lập client):**
    * **URL:** `http://159.223.41.98:8082/api/ui`
@@ -185,26 +190,7 @@ Hệ thống hỗ trợ 2 giao diện để theo dõi và kiểm tra dữ liệu
     -d '{"bid": 2, "campaign_id": 10, "custom_track": "click", "group_id": 20, "job_id": 1, "publisher_id": 1}'
   ```
 
-* **Cách B: Sử dụng giao diện Interactive Web UI** tại đường dẫn `http://159.223.41.98:8082/api/ui`.
 
-* **Cách C: Chạy Script tự động sinh dữ liệu ảo liên tục (Đẩy dữ liệu tự động mỗi 30 giây):**
-  Bạn kết nối vào **PuTTY** và chạy câu lệnh dưới đây để bắt đầu sinh dữ liệu tự động bắn lên API liên tục:
-  ```bash
-  docker exec -it -e API_URL=http://127.0.0.1:80/api/track etl_function_app python /home/site/wwwroot/src/generate_dummy_data_api.py
-  ```
-  *(Để dừng tiến trình, bạn nhấn tổ hợp phím `Ctrl + C` trên cửa sổ PuTTY).*
-
----
-
-### 🔄 4.3. Quan Sát Dữ Liệu Thay Đổi Theo Thời Gian (Real-time Flow)
-Để thấy được dữ liệu thực sự nhảy số thời gian thực trên biểu đồ:
-1. Chạy **Cách C** ở trên để dữ liệu thô liên tục được đẩy vào hệ thống.
-2. Mở thêm 1 cửa sổ PuTTY mới để giám sát logs chạy ngầm của tiến trình Spark ETL:
-   ```bash
-   docker logs -f etl_function_app
-   ```
-   Bạn sẽ thấy log báo: *"Background Spark ETL completed successfully in XXs."* cứ mỗi khi có tin nhắn từ queue kích hoạt.
-3. Mở **Grafana Dashboard** trên trình duyệt, nhấp chọn khoảng xem thời gian là **Last 5 years**, bật tự động làm mới **10s** (Auto-refresh 10s) ở góc trên bên phải. Bạn sẽ thấy các biểu đồ đường và chỉ số KPI tự động tăng tiến và thay đổi cực kỳ sinh động!
 
 
 
