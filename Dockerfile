@@ -7,7 +7,8 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
-    AzureWebJobsFeatureFlags=EnableWorkerIndexing
+    AzureWebJobsFeatureFlags=EnableWorkerIndexing \
+    CONTAINER_NAME=etl_function_app
 
 # Sao chép file requirements.txt từ thư mục config trước để tận dụng cache
 COPY config/requirements.txt /home/site/wwwroot/requirements.txt
@@ -22,5 +23,4 @@ COPY . /home/site/wwwroot
 # Sao chép các tệp tin cấu hình và mã nguồn ra ngoài root folder của container để Azure Functions hoạt động
 RUN cp /home/site/wwwroot/config/host.json /home/site/wwwroot/host.json && \
     cp /home/site/wwwroot/config/local.settings.json /home/site/wwwroot/local.settings.json && \
-    cp /home/site/wwwroot/src/index.html /home/site/wwwroot/index.html && \
     cp /home/site/wwwroot/src/etl_pipeline.py /home/site/wwwroot/function_app.py
