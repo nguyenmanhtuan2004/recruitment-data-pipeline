@@ -8,7 +8,8 @@ RUN apt-get update && \
 
 ENV AzureWebJobsScriptRoot=/home/site/wwwroot \
     AzureWebJobsFeatureFlags=EnableWorkerIndexing \
-    CONTAINER_NAME=etl_function_app
+    CONTAINER_NAME=etl_function_app \
+    AzureFunctionsWebHost__hostid=etl-app
 
 # Sao chép file requirements.txt từ thư mục config trước để tận dụng cache
 COPY config/requirements.txt /home/site/wwwroot/requirements.txt
