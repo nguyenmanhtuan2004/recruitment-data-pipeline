@@ -6,9 +6,6 @@ import json
 import time
 from uuid import UUID
 import azure.functions as func
-from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, lit, udf, coalesce, round, avg, sum, count
-from pyspark.sql.types import StringType
 from cassandra.cluster import Cluster
 from cassandra.auth import PlainTextAuthProvider
 
@@ -42,6 +39,7 @@ MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver"
 def create_spark_session():
     """Khởi tạo SparkSession cục bộ cho lượt chạy hiện tại"""
     import os
+    from pyspark.sql import SparkSession
     os.environ["SPARK_LOCAL_IP"] = "127.0.0.1"
 
     spark = SparkSession.builder \
@@ -66,6 +64,9 @@ def create_spark_session():
 
 
 def process_df(df):
+    from pyspark.sql.functions import col, udf
+    from pyspark.sql.types import StringType
+
     @udf(returnType=StringType())
     def to_datetime_str(uuid_str):
         if not uuid_str:
@@ -88,6 +89,7 @@ def process_df(df):
 
 
 def calculating_clicks(spark, df):
+    from pyspark.sql.functions import round, avg, sum
     clicks_data = df.filter(df.custom_track == 'click')
     clicks_data = clicks_data.na.fill({
         'bid': 0.0, 'job_id': 0, 'publisher_id': 0, 'group_id': 0, 'campaign_id': 0
@@ -222,6 +224,7 @@ def get_mysql_latest_time(spark):
 # 5. Hàm thực thi ETL chính (Main logic)
 # ==========================================
 def main_task(spark, mysql_time):
+    from pyspark.sql.functions import col, lit
     # Đọc Cassandra
     df = spark.read.format("org.apache.spark.sql.cassandra") \
         .options(table=CASSANDRA_TABLE, keyspace=CASSANDRA_KEYSPACE) \
