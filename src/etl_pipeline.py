@@ -313,6 +313,19 @@ def ui_dashboard(req: func.HttpRequest) -> func.HttpResponse:
         return func.HttpResponse(body=f"Failed to load UI: {str(e)}", status_code=500)
 
 
+# Endpoint phục vụ ảnh screenshot của Grafana Dashboard
+@app.route(route="doc/grafana_dashboard.png", methods=["GET"], auth_level=func.AuthLevel.ANONYMOUS)
+def ui_dashboard_image(req: func.HttpRequest) -> func.HttpResponse:
+    logging.info("Dashboard UI image request received.")
+    try:
+        with open("/home/site/wwwroot/doc/grafana_dashboard.png", "rb") as f:
+            image_content = f.read()
+        return func.HttpResponse(body=image_content, mimetype="image/png", status_code=200)
+    except Exception as e:
+        logging.error(f"Failed to read grafana_dashboard.png: {str(e)}")
+        return func.HttpResponse(body=f"Failed to load image: {str(e)}", status_code=500)
+
+
 # POST API: Tiếp nhận dữ liệu -> Lưu Cassandra -> Đẩy vào Queue -> Trả về 202 Accepted lập tức
 @app.route(route="track", methods=["POST", "OPTIONS"], auth_level=func.AuthLevel.ANONYMOUS)
 @app.queue_output(arg_name="msg", queue_name="etl-trigger-queue", connection="AzureWebJobsStorage")
