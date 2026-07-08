@@ -25,16 +25,26 @@ app.add_middleware(
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
 KAFKA_TOPIC = os.environ.get("KAFKA_TOPIC", "recruitment-tracking")
 
-# Khởi tạo Kafka Producer kết nối tới Kafka Broker
+# Khởi tạo Kafka Producer kết nối tới Kafka Broker (Lazy Loading)
 producer = None
-try:
-    producer = KafkaProducer(
-        bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS.split(","),
-        value_serializer=lambda v: json.dumps(v).encode('utf-8')
-    )
-    logging.info(f"Khởi tạo Kafka Producer thành công. Kết nối tới {KAFKA_BOOTSTRAP_SERVERS}")
-except Exception as e:
-    logging.error(f"Khởi tạo Kafka Producer thất bại: {str(e)}")
+
+def get_producer():
+    global producer
+    if producer is None:
+        try:
+            producer = KafkaProducer(
+                bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS.split(","),
+                value_serializer=lambda v: json.dumps(v).encode('utf-8'),
+                max_block_ms=2000,          # Không block API quá 2 giây nếu Kafka chưa sẵn sàng
+                request_timeout_ms=2000      # Timeout request sau 2 giây
+            )
+            logging.info(f"Kết nối Kafka thành công tới {KAFKA_BOOTSTRAP_SERVERS}")
+        except Exception as e:
+            logging.error(f"Khởi tạo Kafka Producer thất bại (sẽ tự động kết nối lại ở request tiếp theo): {str(e)}")
+    return producer
+
+# Thử kết nối lần đầu khi chạy ứng dụng (nếu lỗi sẽ retry lazily khi nhận request)
+get_producer()
 
 # Endpoint trả về giao diện HTML Dashboard tương tác
 @app.get("/api/ui", response_class=HTMLResponse)
@@ -87,9 +97,10 @@ async def track_event(request: Request, response: Response):
             "ts": ts
         }
         
-        if producer:
+        active_producer = get_producer()
+        if active_producer:
             # Gửi bất đồng bộ vào Kafka (không block luồng API)
-            producer.send(KAFKA_TOPIC, payload)
+            active_producer.send(KAFKA_TOPIC, payload)
             logging.info(f"Đã gửi sự kiện vào Kafka: {create_time}")
             return {
                 "status": "accepted",
