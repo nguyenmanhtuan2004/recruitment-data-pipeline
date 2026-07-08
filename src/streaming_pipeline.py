@@ -57,9 +57,9 @@ event_schema = StructType([
 ])
 
 # Hàm lấy metadata Job từ MySQL (để join lấy company_id)
-def retrieve_job_metadata():
+def retrieve_job_metadata(spark_session):
     sql = "(SELECT id AS job_id, company_id, group_id, campaign_id FROM job) job_meta"
-    return spark.read.format('jdbc') \
+    return spark_session.read.format('jdbc') \
         .options(url=MYSQL_URL, driver=MYSQL_DRIVER, dbtable=sql, user=MYSQL_USER, password=MYSQL_PASSWORD) \
         .load()
 
@@ -70,6 +70,9 @@ def process_batch(batch_df, batch_id):
         
     logging.info(f"=== Đang xử lý Micro-batch {batch_id} - Số lượng bản ghi: {batch_df.count()} ===")
     
+    # Lấy SparkSession riêng của batch DataFrame (bắt buộc cho Structured Streaming)
+    batch_spark = batch_df.sparkSession
+
     # 1. Ghi nhận dữ liệu thô vào Cassandra (Data Lake)
     raw_to_save = batch_df.select(
         'create_time', 'bid', 'campaign_id', 'custom_track', 'group_id', 'job_id', 'publisher_id', 'ts'
@@ -82,31 +85,31 @@ def process_batch(batch_df, batch_id):
     logging.info("Đã ghi log thô thành công vào Cassandra.")
 
     # 2. Xử lý tổng hợp (Aggregation)
-    # Chia nhánh tính toán
+    # Chia nhánh tính toán (đăng ký view trên batch_spark)
     batch_df.createOrReplaceTempView("raw_events")
     
-    clicks_df = spark.sql("""
+    clicks_df = batch_spark.sql("""
         SELECT job_id, DATE(ts) AS dates, HOUR(ts) AS hours, publisher_id, campaign_id, group_id,
                ROUND(AVG(bid), 2) AS bid_set, COUNT(*) AS clicks, ROUND(SUM(bid), 2) AS spend_hour
         FROM raw_events WHERE custom_track = 'click'
         GROUP BY job_id, DATE(ts), HOUR(ts), publisher_id, campaign_id, group_id
     """)
     
-    conversions_df = spark.sql("""
+    conversions_df = batch_spark.sql("""
         SELECT job_id, DATE(ts) AS dates, HOUR(ts) AS hours, publisher_id, campaign_id, group_id,
                COUNT(*) AS conversion
         FROM raw_events WHERE custom_track = 'conversion'
         GROUP BY job_id, DATE(ts), HOUR(ts), publisher_id, campaign_id, group_id
     """)
     
-    qualified_df = spark.sql("""
+    qualified_df = batch_spark.sql("""
         SELECT job_id, DATE(ts) AS dates, HOUR(ts) AS hours, publisher_id, campaign_id, group_id,
                COUNT(*) AS qualified_application
         FROM raw_events WHERE custom_track = 'qualified'
         GROUP BY job_id, DATE(ts), HOUR(ts), publisher_id, campaign_id, group_id
     """)
     
-    unqualified_df = spark.sql("""
+    unqualified_df = batch_spark.sql("""
         SELECT job_id, DATE(ts) AS dates, HOUR(ts) AS hours, publisher_id, campaign_id, group_id,
                COUNT(*) AS disqualified_application
         FROM raw_events WHERE custom_track = 'unqualified'
@@ -121,7 +124,7 @@ def process_batch(batch_df, batch_id):
         .join(unqualified_df, on=join_keys, how='full')
         
     # 3. Stream-to-Static Join với MySQL Job Metadata để lấy company_id
-    job_meta = retrieve_job_metadata()
+    job_meta = retrieve_job_metadata(batch_spark)
     
     final_output = aggregated_df.join(job_meta, 'job_id', 'left') \
         .drop(job_meta.group_id) \
