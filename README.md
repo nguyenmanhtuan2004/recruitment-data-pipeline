@@ -1,198 +1,167 @@
-## 📌 1. Bối Cảnh & Nhiệm Vụ (Situation & Task)
+# 🚀 Recruitment Data Pipeline - Kafka & Spark Structured Streaming
 
-### 🎬 Situation (Bối cảnh)
-Bộ phận kinh doanh và marketing của nền tảng tuyển dụng trực tuyến cần liên tục theo dõi hiệu suất của các tin tuyển dụng (Jobs), chiến dịch marketing (Campaigns) và nguồn cung cấp ứng viên (Publishers). Dữ liệu hành vi người dùng được sinh ra từ việc tương tác website liên tục đổ về Cassandra nhưng được lưu trữ dưới dạng log thô, chưa được làm sạch hay tổng hợp. Điều này khiến doanh nghiệp gặp nhiều khó khăn trong việc đánh giá nhanh tình hình thị trường lao động và đưa ra quyết định tối ưu hóa ngân sách chạy quảng cáo tin tuyển dụng.
-
-### 🎯 Task (Nhiệm vụ)
-Xây dựng hệ thống **Data Pipeline (ETL)** tự động thu thập hành vi người dùng từ Cassandra, tổng hợp các chỉ số hiệu suất (Clicks, Conversions, Qualified/Unqualified) và nạp vào MySQL phục vụ báo cáo Near Real-time.
-
+Hệ thống Data Pipeline xử lý hành vi người dùng thời gian thực (Real-time Clickstream Processing) cho nền tảng tuyển dụng trực tuyến, chuyển đổi kiến trúc từ Batch Processing cũ sang **Event-Driven Streaming Architecture** sử dụng **FastAPI, Apache Kafka, Apache Cassandra, PySpark Structured Streaming, MySQL và Grafana**.
 
 ---
 
-## 🏗️ 2. Giải Pháp & Kết Quả (Action & Result)
+## 📌 1. Bối Cảnh & Nhiệm Vụ (Situation & Task)
 
-### 🛠️ Action (Hành động)
-Tôi đã thiết kế và triển khai một kiến trúc **Micro-batch ETL** trên hạ tầng container hóa **Docker** (giả lập môi trường cloud Azure Functions và databases) với luồng xử lý chi tiết như sau:
+### 🎬 Situation (Bối cảnh)
+Bộ phận kinh doanh và marketing của nền tảng tuyển dụng trực tuyến cần liên tục theo dõi hiệu suất của các tin tuyển dụng (Jobs), chiến dịch quảng cáo (Campaigns) và nguồn cung cấp ứng viên (Publishers) theo thời gian thực. 
+Trước đây, hệ thống chạy cơ chế Batch (quét Cassandra 3 phút/lần) có độ trễ lớn (~3 phút), thường xuyên quá tải CPU và bị nghẽn kết nối. Doanh nghiệp cần một giải pháp xử lý tức thời để đánh giá nhanh tình hình thị trường lao động và đưa ra quyết định tối ưu hóa ngân sách quảng cáo ngay lập tức.
 
-#### 📐 Sơ đồ kiến trúc & Luồng dữ liệu (Architecture & Data Flow)
+### 🎯 Task (Nhiệm vụ)
+Di chuyển toàn bộ kiến trúc pipeline sang **Real-time Streaming**:
+* Xây dựng API tiếp nhận sự kiện phản hồi siêu tốc.
+* Thiết lập hàng đợi sự kiện chịu tải cao để lưu vết lịch sử.
+* Phát triển Spark Structured Streaming xử lý biến đổi, làm giàu dữ liệu (Stream-to-Static Join) và tổng hợp tức thời.
+* **Mục tiêu độ trễ (Latency):** Giảm từ 3 phút xuống **dưới 10 giây (thực tế đạt ~7 giây)**.
+
+---
+
+## 🏗️ 2. Kiến Trúc Hệ Thống & Luồng Dữ Liệu
+
+### 📐 Sơ đồ kiến trúc (Architecture Flowchart)
 ```mermaid
 flowchart TD
     subgraph Web_Client [Website Tuyển Dụng]
-        UserInteract[Hành vi người dùng: click, apply, qualify...]
+        UserInteract["Hành vi người dùng: Click, Apply, Qualify..."]
     end
 
-    subgraph Source_Storage [Cơ sở dữ liệu Nguồn]
-        Cassandra[(Apache Cassandra)]
+    subgraph Ingestion_Layer [Tầng Tiếp Nhận]
+        FastAPI["FastAPI Ingestion API (app.py)"]
+        KafkaBroker[("Apache Kafka (KRaft Mode)")]
+        UserInteract -->|HTTP POST /api/track| FastAPI
+        FastAPI -->|Publish Events| KafkaBroker
     end
 
-    subgraph Processing_Layer [Xử lý & Biến đổi dữ liệu]
-        SparkHost[Azure Function App - Timer Trigger]
-        SparkEngine[[PySpark Engine]]
-        SparkHost --> SparkEngine
+    subgraph Processing_Layer [Tầng Xử Lý Luồng]
+        SparkStreaming[["PySpark Structured Streaming (streaming_pipeline.py)"]]
+        KafkaBroker -->|Subscribe Stream| SparkStreaming
     end
 
-    subgraph Target_Storage [Cơ sở dữ liệu Đích]
-        MySQL[(MySQL database: etl_database)]
+    subgraph Storage_Layer [Tầng Lưu Trữ]
+        Cassandra[("Apache Cassandra (Data Lake)")]
+        MySQL[("MySQL (Data Warehouse)")]
+        SparkStreaming -->|1. Lưu Log Thô| Cassandra
+        SparkStreaming -->|2. Tra Cứu Job Metadata| MySQL
+        SparkStreaming -->|3. Nạp Chỉ Số Tổng Hợp| MySQL
     end
 
-    subgraph Visualization_Layer [Trực quan hóa]
-        Grafana[Grafana Dashboard]
+    subgraph Visualization_Layer [Trực Quan Hóa]
+        Grafana["Grafana Dashboard"]
+        MySQL -->|Truy Vấn KPI Real-time| Grafana
     end
-
-    %% Luồng dữ liệu
-    UserInteract -->|Lưu Log thô| Cassandra
-    Cassandra -->|1. Đọc Incremental| SparkEngine
-    MySQL -->|2. Tra cứu Job Metadata| SparkEngine
-    SparkEngine -->|3. Tổng hợp & Join| SparkEngine
-    SparkEngine -->|4. Nạp dữ liệu aggregated| MySQL
-    MySQL -->|5. Truy vấn báo cáo| Grafana
 ```
 
-#### ⚙️ Chi tiết luồng xử lý:
-1.  **Điều phối tự động (Orchestrator)**: Thiết lập **Azure Function App** (với Timer Trigger) làm thành phần kích hoạt tiến trình ETL định kỳ mỗi 3 phút (hỗ trợ cả cơ chế trigger bất đồng bộ qua Azure Queue Storage).
-2.  **Xử lý dữ liệu lớn với PySpark**:
-    *   **Incremental Load (CDC)**: Trích xuất dữ liệu hành vi thô từ database NoSQL **Apache Cassandra**,  chỉ lấy các bản ghi mới kể từ lần đồng bộ gần nhất, tránh quét toàn bộ bảng (Full table scan).
-    *   **Data Aggregation**: Nhóm dữ liệu đa chiều theo Khung giờ (`hours`), Ngày (`dates`), Mã tin (`job_id`), Nguồn (`publisher_id`) và Chiến dịch (`campaign_id`) để tính toán số lượng tương tác, conversion và chi phí (`spend_hour`).
-    *   **Data Enrichment**: Kết hợp (Join) luồng dữ liệu thô đang xử lý với thông tin danh nghiệp (Job Metadata, Publisher Metadata) từ **MySQL** để làm giàu thông tin tuyển dụng.
-3.  **Lưu trữ & Trực quan hóa**:
-    *   **Load**: Nạp dữ liệu đã tổng hợp (aggregated data) vào bảng đích `events` trong **MySQL** sử dụng Spark JDBC connector.
-    *   **Visualize**: Kết nối **Grafana** với MySQL để xây dựng các báo cáo thời gian thực giúp giám sát và ra quyết định.
-
-### 🏆 Result (Kết quả)
-Triển khai thành công hệ thống giám sát Near Real-time. Dữ liệu được xử lý trơn tru và trực quan hóa rõ ràng trên Grafana Dashboard, giúp ban lãnh đạo và chuyên viên tuyển dụng:
-*   Theo dõi và tổng hợp chính xác các chỉ số hiệu suất của từng tin tuyển dụng.
-*   Đánh giá chính xác chất lượng ứng viên từ các nguồn cung cấp (Publishers) khác nhau.
-*   Nắm bắt kịp thời tình hình ngành và đưa ra các quyết định tối ưu hóa ngân sách chạy quảng cáo hiệu quả.
+### ⚙️ Chi tiết luồng xử lý:
+1. **API Ingestion (FastAPI):** Tiếp nhận gói tin tracking từ client, đóng gói payload, sinh định danh UUIDv1 và đẩy bất đồng bộ (Asynchronous) vào Kafka Topic `recruitment-tracking` trong vòng **2ms**.
+2. **Event Broker (Kafka KRaft):** Đóng vai trò hàng đợi sự kiện, lưu trữ tạm thời và đảm bảo thứ tự thời gian của luồng sự kiện.
+3. **Real-time Processing (PySpark Structured Streaming):**
+   * Đăng ký lắng nghe Kafka Stream, tự động phân giải JSON từ byte nhị phân dựa trên Schema định sẵn.
+   * **Write to Data Lake:** Ghi trực tiếp log thô vào **Cassandra** phục vụ phân tích chuyên sâu sau này.
+   * **Stream-to-Static Join:** Ghép nối dữ liệu stream với bảng dữ liệu tĩnh `job` trong **MySQL** để lấy mã công ty (`company_id`).
+   * **Aggregation:** Tổng hợp chỉ số (Clicks, Conversions, Qualified/Unqualified, Spend) theo giờ và theo ngày.
+   * **Write to Data Warehouse:** Ghi đè cập nhật số liệu trực tiếp vào bảng `events` của **MySQL**.
+4. **Dashboard (Grafana):** Kết nối trực tiếp vào MySQL hiển thị đồ thị tương tác nhảy số thời gian thực với **tổng độ trễ luồng chỉ ~7 giây**.
 
 ---
 
 ## 🚀 3. Hướng Dẫn Cài Đặt Và Chạy Hệ Thống
 
 ### 📋 Yêu cầu hệ thống:
-*   Máy tính đã cài đặt **Docker** và **Docker Compose**.
-*   **Python 3.10+** (được cài đặt trên máy host để chạy các kịch bản sinh dữ liệu và khởi tạo).
+* Máy tính đã cài đặt **Docker** và **Docker Compose**.
+* **Python 3.10+** chạy trên máy Host (để chạy script sinh dữ liệu).
 
 ---
 
 ### Bước 1: Cài đặt thư viện Python ở máy Host
-Trước khi chạy các kịch bản Python cục bộ, hãy cài đặt các thư viện kết nối cần thiết trên máy tính của bạn:
+Cài đặt các thư viện hỗ trợ kịch bản test:
 ```bash
-pip install pandas mysql-connector-python cassandra-driver requests
+pip install pandas mysql-connector-python kafka-python requests
 ```
 
-### Bước 2: Khởi động cụm dịch vụ bằng Docker Compose
-Mở terminal tại thư mục dự án và chạy lệnh sau để khởi chạy toàn bộ các dịch vụ (MySQL, Cassandra, Spark, Azurite, Grafana, và Function App):
+### Bước 2: Khởi động hệ thống bằng Docker Compose
+Khởi chạy toàn bộ hạ tầng (Kafka, FastAPI, Spark Worker, Cassandra, MySQL, Grafana):
 ```bash
 docker compose up -d --build
 ```
-*Đợi khoảng 1-2 phút cho các container khởi động hoàn tất và kiểm tra trạng thái bằng lệnh:*
+*Đợi các container khởi động hoàn toàn, kiểm tra trạng thái hoạt động:*
 ```bash
 docker compose ps
 ```
 
-### Bước 3: Khởi tạo cấu trúc bảng và dữ liệu mẫu (Seed Data)
-Để đảm bảo Cassandra và MySQL được thiết lập sẵn sàng (tránh lỗi thiếu Keyspace/Table hoặc thiếu dữ liệu Job gốc), hãy chạy script khởi tạo sau:
+### Bước 3: Khởi tạo cấu trúc cơ sở dữ liệu
+Để tạo các bảng và keyspace cần thiết, chạy script:
 ```bash
 python src/init_db.py
 ```
-*Script này sẽ tự động tạo Keyspace `recruitment` và bảng `tracking` trong Cassandra, đồng thời tạo các bảng `job`, `master_publisher`, `events` và nạp sẵn dữ liệu mẫu trong MySQL.*
 
-### Bước 4: Sinh dữ liệu tương tác ảo
+### Bước 4: Chạy luồng giả lập sinh dữ liệu liên tục (Generator)
+Bạn có thể sinh dữ liệu ảo bằng một trong hai cách:
 
-Bạn có thể sinh dữ liệu ảo theo một trong hai cách dưới đây:
-
-#### Cách A: Sinh dữ liệu trực tiếp vào Cassandra (Không qua API)
-Chạy script để ghi trực tiếp các tương tác ngẫu nhiên vào database Cassandra:
+#### Cách A: Sinh dữ liệu trực tiếp vào Cassandra (Bypass API)
 ```bash
 python src/generate_dummy_data.py
 ```
-*Script này truy cập MySQL lấy thông tin Metadata (Jobs, Publishers), sau đó tạo dữ liệu thô và ghi thẳng vào Cassandra mỗi 30 giây.*
+*Script này ghi dữ liệu trực tiếp vào Cassandra để giả lập hệ thống cũ.*
 
-#### Cách B: Sinh dữ liệu thông qua HTTP API (Gọi tới API `/api/track`)
-Giả lập client liên tục bắn request HTTP POST chứa JSON payload tới API của Function App:
-*   **Nếu chạy ở máy cá nhân (Cục bộ):**
-    ```bash
-    python src/generate_dummy_data_api.py
-    ```
-*   **Nếu chạy trên Máy chủ Production (Docker exec qua PuTTY):**
-    ```bash
-    docker exec -it -e API_URL=http://127.0.0.1:80/api/track etl_function_app python /home/site/wwwroot/src/generate_dummy_data_api.py
-    ```
-*Script này sẽ gọi tới API, giúp kiểm tra tính năng xử lý bất đồng bộ (Lưu Cassandra -> Gửi Queue -> Kích hoạt Spark ETL ngầm).*
-
-### Bước 5: Quan sát tiến trình ETL hoạt động
-*   Theo lịch trình mặc định, **Azure Function** sẽ thức dậy mỗi **5 phút** một lần để chạy tiến trình ETL PySpark.
-*   Bạn có thể theo dõi tiến độ xử lý và logs của ETL bằng cách chạy lệnh:
-    ```bash
-    docker logs -f etl_function_app
-    ```
-*   Khi có dữ liệu mới, log sẽ thông báo nạp thành công dữ liệu gia tăng (Incremental Sync) vào MySQL. Nếu không có dữ liệu mới, tiến trình sẽ thông báo bỏ qua lượt chạy để tiết kiệm tài nguyên.
-
-### Bước 6: Thiết lập Dashboard trên Grafana
-1.  Truy cập Grafana tại địa chỉ: [http://localhost:3000](http://localhost:3000) (tài khoản: `admin` / mật khẩu: `admin`).
-2.  Kết nối Data Source là **MySQL** với thông tin kết nối:
-    *   **Host:** `mysql:3306`
-    *   **Database:** `etl_database`
-    *   **User:** `root`
-    *   **Password:** `123`
-3.  Truy cập trực tiếp Dashboard đã lưu bằng đường link rút gọn sau:
-    
-    [![Grafana Dashboard](https://img.shields.io/badge/Grafana-Dashboard-orange?style=for-the-badge&logo=grafana)](http://localhost:3000/goto/dfq2eloq0clj4f?orgId=1)
-    
-    *(Hoặc link: [http://localhost:3000/goto/dfq2eloq0clj4f?orgId=1](http://localhost:3000/goto/dfq2eloq0clj4f?orgId=1))*
-
-    **Giao diện Dashboard trực quan:**
-    ![Grafana Dashboard (Screenshot)](doc/grafana_dashboard.png)
-
+#### Cách B: Bắn dữ liệu liên tục qua Ingestion API (Được khuyến nghị)
+```bash
+python src/generate_dummy_data_api.py
+```
+*Script này liên tục thực hiện cuộc gọi HTTP POST gửi JSON payload tới `/api/track` (cổng `8082`), đi qua toàn bộ luồng Ingestion (FastAPI -> Kafka -> Spark -> Cassandra/MySQL).*
 
 ---
 
-## 🌐 4. Hướng Dẫn Sử Dụng & Kiểm Thử Trên Production (Cloud Deployment)
-
-Sau khi hệ thống được deploy thành công lên server cloud (DigitalOcean Droplet), bạn có thể kiểm thử luồng dữ liệu thời gian thực theo hướng dẫn dưới đây:
-
-### 📊 4.1. Địa Chỉ Xem Dashboard Trực Quan
-Hệ thống hỗ trợ 2 giao diện để theo dõi và kiểm tra dữ liệu:
-1. **Grafana Dashboard (Theo dõi KPI tổng hợp):**
-   * **URL:** `http://159.223.41.98:3000`
-   * **Đăng nhập:** Tài khoản mặc định là `admin`/`Tu@nloc00` (hoặc mật khẩu mới bạn đã cập nhật).
-   * **Cách xem dữ liệu thay đổi:** Nhấp vào nút **Refresh** (vòng xoay) ở góc trên bên phải, hoặc chọn mốc thời gian xem là **Last 5 years** (để bao quát dữ liệu mới năm 2026 và dữ liệu mẫu năm 2022).
-2. **Interactive Web UI (Giao diện giả lập client):**
-   * **URL:** `http://159.223.41.98:8082/api/ui`
-   * **Chức năng:** Cho phép click chọn tin tuyển dụng và bấm gửi log nhanh ngay trên trình duyệt mà không cần viết code.
+### Bước 5: Theo dõi log Spark Streaming hoạt động
+Để kiểm tra xem PySpark Structured Streaming có đang đọc và xử lý micro-batch từ Kafka hay không, hãy chạy:
+```bash
+docker logs -f etl_streaming_worker
+```
+*Mỗi khi có dữ liệu mới đổ về từ API, bạn sẽ thấy Spark in log xử lý và lưu trữ thành công:*
+```text
+INFO - === Đang xử lý Micro-batch 0 - Số lượng bản ghi: 5 ===
+INFO - Đã ghi log thô thành công vào Cassandra.
+INFO - Đã gộp và đồng bộ hóa thành công dữ liệu KPI lên MySQL!
+```
 
 ---
 
-### 📥 4.2. Cách Đẩy Dữ Liệu Vào Ingestion API
-Để mô phỏng hành vi người dùng (click, apply...) đổ về hệ thống, bạn có thể đẩy dữ liệu dạng JSON thông qua phương thức POST:
+### Bước 6: Xem kết quả trên Grafana Dashboard
+1. Truy cập Grafana tại địa chỉ: [http://localhost:3000](http://localhost:3000) (Tài khoản mặc định: `admin` / `admin`).
+2. Data Source **MySQL** đã được cấu hình sẵn trong docker compose (hoặc tự cấu hình kết nối tới `mysql:3306`, database: `etl_database`).
+3. Truy cập trực tiếp link Dashboard: [http://localhost:3000/goto/dfq2eloq0clj4f?orgId=1](http://localhost:3000/goto/dfq2eloq0clj4f?orgId=1)
+4. Quan sát số liệu nhảy liên tục thời gian thực sau mỗi lượt click/apply.
 
+---
+
+## 🌐 4. Kiểm Thử Trên Môi Trường Cloud Production
+
+Khi dự án được deploy lên Cloud (ví dụ DigitalOcean Droplet), bạn có thể kiểm thử luồng và theo dõi dữ liệu bằng các địa chỉ sau:
+
+### 📊 4.1. Xem Grafana Dashboard Trực Quan
+* **URL:** `http://159.223.41.98:3000`
+* **Tài khoản đăng nhập mặc định:** `admin` / `Tu@nloc00`
+* **Đường dẫn trực tiếp đến Dashboard:** [http://159.223.41.98:3000/goto/dfq2eloq0clj4f?orgId=1](http://159.223.41.98:3000/goto/dfq2eloq0clj4f?orgId=1)
+* *Lưu ý:* Chọn refresh rate hoặc nhấn refresh trên Grafana để thấy số liệu thay đổi ngay lập tức sau khi gửi event.
+
+### 📥 4.2. Gửi Event thủ công qua API:
 * **Method:** `POST`
 * **URL:** `http://159.223.41.98:8082/api/track`
 * **Headers:** `Content-Type: application/json`
-* **JSON Payload mẫu:**
-  ```json
-  {
-    "custom_track": "click",
-    "bid": 2,
-    "job_id": 1,
-    "publisher_id": 1,
-    "campaign_id": 10,
-    "group_id": 20
-  }
-  ```
+* **Body mẫu:**
+```json
+{
+  "custom_track": "click",
+  "bid": 2,
+  "job_id": 1,
+  "publisher_id": 1,
+  "campaign_id": 10,
+  "group_id": 20
+}
+```
 
-#### 💻 Cách gửi dữ liệu (Chọn 1 trong 3 cách):
-
-* **Cách A: Dùng lệnh CURL (Chạy trên Terminal của máy Windows hoặc PuTTY):**
-  ```bash
-  curl -X POST http://159.223.41.98:8082/api/track \
-    -H "Content-Type: application/json" \
-    -d '{"bid": 2, "campaign_id": 10, "custom_track": "click", "group_id": 20, "job_id": 1, "publisher_id": 1}'
-  ```
-
-* **Cách B: Sử dụng giao diện Interactive Web UI** tại đường dẫn `http://159.223.41.98:8082/api/ui`.
-
-
-
-
-
+### 💻 4.3. Xem qua giao diện Interactive Web UI:
+* **URL:** `http://159.223.41.98:8082/api/ui` (Hoặc `http://localhost:8082/api/ui` khi chạy local)
+* **Chức năng:** Giao diện HTML giả lập cho phép click nút gửi sự kiện trực tiếp trên trình duyệt để kiểm tra luồng dữ liệu thời gian thực.

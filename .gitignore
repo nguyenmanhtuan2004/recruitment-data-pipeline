@@ -9,3 +9,11 @@ __pycache__/
 !TECHNICAL_DETAILS.md
 .docker/
 
+# Sensitive environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+.env.staging
+

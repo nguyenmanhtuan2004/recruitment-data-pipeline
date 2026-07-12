@@ -3,7 +3,7 @@ import sys
 import time
 import logging
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import col, from_json, lit, current_timestamp
+from pyspark.sql.functions import col, from_json, lit, current_timestamp, broadcast
 from pyspark.sql.types import StructType, StructField, StringType, IntegerType
 
 # Setup logging
@@ -27,7 +27,7 @@ MYSQL_PASSWORD = os.environ.get("MYSQL_PASSWORD", "123")
 MYSQL_DATABASE = os.environ.get("MYSQL_DATABASE", "etl_database")
 MYSQL_TARGET_TABLE = os.environ.get("MYSQL_TARGET_TABLE", "events")
 
-MYSQL_URL = f"jdbc:mysql://{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}"
+MYSQL_URL = f"jdbc:mysql://{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DATABASE}?rewriteBatchedStatements=true&useSSL=false"
 MYSQL_DRIVER = "com.mysql.cj.jdbc.Driver"
 
 # Khởi tạo Spark Session với đầy đủ packages kết nối
@@ -40,6 +40,8 @@ spark = SparkSession.builder \
     .config("spark.cassandra.auth.username", CASSANDRA_USER) \
     .config("spark.cassandra.auth.password", CASSANDRA_PASSWORD) \
     .config("spark.driver.memory", "512m") \
+    .config("spark.sql.shuffle.partitions", "2") \
+    .config("spark.default.parallelism", "2") \
     .getOrCreate()
 
 spark.sparkContext.setLogLevel("WARN")
@@ -63,17 +65,46 @@ def retrieve_job_metadata(spark_session):
         .options(url=MYSQL_URL, driver=MYSQL_DRIVER, dbtable=sql, user=MYSQL_USER, password=MYSQL_PASSWORD) \
         .load()
 
+# --- Cơ chế Cache & Auto-refresh Metadata Job định kỳ từ MySQL ---
+job_metadata_df = None
+last_metadata_refresh_time = 0.0
+
+def get_job_metadata(spark_session):
+    global last_metadata_refresh_time, job_metadata_df
+    current_time = time.time()
+    
+    # Khởi tạo lần đầu (Lazy Loading) khi có micro-batch đầu tiên đổ về
+    if job_metadata_df is None:
+        logging.info(">>> Khởi tạo lần đầu: Tiến hành tải và Cache metadata Job từ MySQL...")
+        job_metadata_df = retrieve_job_metadata(spark_session).cache()
+        last_metadata_refresh_time = current_time
+    # Tự động reload sau mỗi 5 phút (300 giây) để nạp Jobs mới từ MySQL
+    elif current_time - last_metadata_refresh_time > 300:
+        logging.info(">>> Định kỳ 5 phút: Tiến hành làm mới (reload) metadata Job từ MySQL...")
+        try:
+            job_metadata_df.unpersist()
+            job_metadata_df = retrieve_job_metadata(spark_session).cache()
+            last_metadata_refresh_time = current_time
+            logging.info(">>> Làm mới metadata Job thành công.")
+        except Exception as e:
+            logging.error(f"Lỗi khi reload metadata Job: {str(e)}. Vẫn tiếp tục sử dụng cache cũ.")
+            
+    return job_metadata_df
+
+
 # Hàm xử lý logic cho từng micro-batch nhận từ Kafka
 def process_batch(batch_df, batch_id):
     if batch_df.isEmpty():
         return
         
+    start_time = time.time()
     logging.info(f"=== Đang xử lý Micro-batch {batch_id} - Số lượng bản ghi: {batch_df.count()} ===")
     
     # Lấy SparkSession riêng của batch DataFrame (bắt buộc cho Structured Streaming)
     batch_spark = batch_df.sparkSession
 
     # 1. Ghi nhận dữ liệu thô vào Cassandra (Data Lake)
+    t_start = time.time()
     raw_to_save = batch_df.select(
         'create_time', 'bid', 'campaign_id', 'custom_track', 'group_id', 'job_id', 'publisher_id', 'ts'
     )
@@ -82,9 +113,10 @@ def process_batch(batch_df, batch_id):
         .options(table=CASSANDRA_TABLE, keyspace=CASSANDRA_KEYSPACE) \
         .mode("append") \
         .save()
-    logging.info("Đã ghi log thô thành công vào Cassandra.")
+    logging.info(f"Đã ghi log thô thành công vào Cassandra. (Thời gian: {time.time() - t_start:.3f}s)")
 
-    # 2. Xử lý tổng hợp (Aggregation)
+    # 2. Xử lý tổng hợp (Aggregation) & 3. Join với Metadata
+    t_start = time.time()
     # Chia nhánh tính toán (đăng ký view trên batch_spark)
     batch_df.createOrReplaceTempView("raw_events")
     
@@ -123,10 +155,10 @@ def process_batch(batch_df, batch_id):
         .join(qualified_df, on=join_keys, how='full') \
         .join(unqualified_df, on=join_keys, how='full')
         
-    # 3. Stream-to-Static Join với MySQL Job Metadata để lấy company_id
-    job_meta = retrieve_job_metadata(batch_spark)
+    # 3. Stream-to-Static Join với MySQL Job Metadata đã được cache & reload định kỳ
+    job_meta = get_job_metadata(batch_spark)
     
-    final_output = aggregated_df.join(job_meta, 'job_id', 'left') \
+    final_output = aggregated_df.join(broadcast(job_meta), 'job_id', 'left') \
         .drop(job_meta.group_id) \
         .drop(job_meta.campaign_id)
         
@@ -146,17 +178,23 @@ def process_batch(batch_df, batch_id):
     # Thêm cột bổ trợ
     final_output = final_output.withColumn('sources', lit('Kafka-Streaming'))
     final_output = final_output.withColumn('updated_at', current_timestamp())
+    logging.info(f"Đã hoàn thành Aggregation và Join Metadata. (Thời gian: {time.time() - t_start:.3f}s)")
     
     # 4. Ghi đè/Nạp vào MySQL events table
-    final_output.write.format("jdbc") \
+    t_start = time.time()
+    final_output.coalesce(2).write.format("jdbc") \
         .option("driver", MYSQL_DRIVER) \
         .option("url", MYSQL_URL) \
         .option("dbtable", MYSQL_TARGET_TABLE) \
         .mode("append") \
         .option("user", MYSQL_USER) \
         .option("password", MYSQL_PASSWORD) \
+        .option("batchsize", "5000") \
+        .option("isolationLevel", "NONE") \
         .save()
-    logging.info("Đã nạp số liệu tổng hợp thời gian thực thành công vào MySQL.")
+    logging.info(f"Đã nạp số liệu tổng hợp thời gian thực thành công vào MySQL. (Thời gian: {time.time() - t_start:.3f}s)")
+    
+    logging.info(f"=== Kết thúc Micro-batch {batch_id} - Tổng thời gian xử lý: {time.time() - start_time:.3f}s ===")
 
 # Kết nối luồng stream đọc từ Kafka
 kafka_stream = spark.readStream \
@@ -164,6 +202,7 @@ kafka_stream = spark.readStream \
     .option("kafka.bootstrap.servers", KAFKA_BOOTSTRAP_SERVERS) \
     .option("subscribe", KAFKA_TOPIC) \
     .option("startingOffsets", "latest") \
+    .option("failOnDataLoss", "false") \
     .load()
 
 # Phân giải giá trị Kafka (value) từ JSON sang Struct DataFrame
@@ -172,9 +211,10 @@ parsed_stream = kafka_stream.selectExpr("CAST(value AS STRING) as json_str") \
     .select("data.*") \
     .filter(col("job_id").isNotNull())
 
-# Khởi chạy luồng ghi Structured Streaming
+# Khởi chạy luồng ghi Structured Streaming với trigger mỗi 10 giây để tối ưu tài nguyên và giảm tải database
 query = parsed_stream.writeStream \
     .foreachBatch(process_batch) \
+    .trigger(processingTime='10 seconds') \
     .option("checkpointLocation", "/tmp/spark-kafka-checkpoint") \
     .start()
 

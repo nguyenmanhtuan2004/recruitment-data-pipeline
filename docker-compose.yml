@@ -5,6 +5,7 @@ services:
   mysql:
     image: mysql:8.0
     container_name: etl_mysql
+    command: --skip-name-resolve --innodb-flush-log-at-trx-commit=2 --innodb-doublewrite=0 --innodb-buffer-pool-size=256M
     environment:
       MYSQL_ROOT_PASSWORD: "123"
       MYSQL_DATABASE: etl_database
@@ -68,19 +69,51 @@ services:
     networks:
       - etl_network
 
-  # --- VISUALIZATION ---
-  grafana:
-    image: grafana/grafana:latest
-    container_name: etl_grafana
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
+  # --- KAFKA TOPIC INITIALIZER ---
+  kafka-setup:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: etl_kafka_setup
+    depends_on:
+      - kafka
+    entrypoint: 
+      - "sh"
+      - "-c"
+      - "echo 'Waiting for Kafka...'; cub kafka-ready -b kafka:29092 1 30 && kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic recruitment-tracking --partitions 1 --replication-factor 1"
     networks:
       - etl_network
-    depends_on:
-      mysql:
-        condition: service_healthy
+
+  # --- VISUALIZATION (Grafana Local - Disabled to save memory) ---
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: etl_grafana
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #   networks:
+  #     - etl_network
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #   environment:
+  #     GF_AUTH_ANONYMOUS_ENABLED: "true"
+  #     GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+  #     GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
+
+  # --- GRAFANA CLOUD PDC AGENT ---
+  pdc-agent:
+    image: grafana/pdc-agent:latest
+    container_name: etl_pdc_agent
+    restart: always
+    command:
+      - "-token"
+      - "${GRAFANA_PDC_TOKEN}"
+      - "-cluster"
+      - "prod-ap-southeast-1"
+      - "-gcloud-hosted-grafana-id"
+      - "1704427"
+    networks:
+      - etl_network
 
   # --- API INGESTION SERVICE (FASTAPI) ---
   etl-api-service:
@@ -136,4 +169,4 @@ networks:
 volumes:
   mysql_data:
   cassandra_data:
-  grafana_data:
+  # grafana_data:
