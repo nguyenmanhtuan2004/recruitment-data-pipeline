@@ -129,10 +129,8 @@ INFO - Đã gộp và đồng bộ hóa thành công dữ liệu KPI lên MySQL!
 ---
 
 ### Bước 6: Xem kết quả trên Grafana Dashboard
-1. Truy cập Grafana tại địa chỉ: [http://localhost:3000](http://localhost:3000) (Tài khoản mặc định: `admin` / `admin`).
-2. Data Source **MySQL** đã được cấu hình sẵn trong docker compose (hoặc tự cấu hình kết nối tới `mysql:3306`, database: `etl_database`).
-3. Truy cập trực tiếp link Dashboard: [http://localhost:3000/goto/dfq2eloq0clj4f?orgId=1](http://localhost:3000/goto/dfq2eloq0clj4f?orgId=1)
-4. Quan sát số liệu nhảy liên tục thời gian thực sau mỗi lượt click/apply.
+1. Truy cập trực tiếp liên kết Dashboard trực tuyến trên Grafana Cloud (Không cần đăng nhập): [Grafana Live Dashboard](https://loyallagoon578.grafana.net/public-dashboards/c0be1c061fef47eaa2dc37a4db5ce42a)
+2. Quan sát số liệu nhảy liên tục thời gian thực sau mỗi lượt click/apply được gửi từ script giả lập.
 
 ---
 
@@ -141,10 +139,8 @@ INFO - Đã gộp và đồng bộ hóa thành công dữ liệu KPI lên MySQL!
 Khi dự án được deploy lên Cloud (ví dụ DigitalOcean Droplet), bạn có thể kiểm thử luồng và theo dõi dữ liệu bằng các địa chỉ sau:
 
 ### 📊 4.1. Xem Grafana Dashboard Trực Quan
-* **URL:** `http://159.223.41.98:3000`
-* **Tài khoản đăng nhập mặc định:** `admin` / `Tu@nloc00`
-* **Đường dẫn trực tiếp đến Dashboard:** [http://159.223.41.98:3000/goto/dfq2eloq0clj4f?orgId=1](http://159.223.41.98:3000/goto/dfq2eloq0clj4f?orgId=1)
-* *Lưu ý:* Chọn refresh rate hoặc nhấn refresh trên Grafana để thấy số liệu thay đổi ngay lập tức sau khi gửi event.
+* **Đường dẫn xem trực tiếp (Không cần đăng nhập):** [Grafana Live Dashboard](https://loyallagoon578.grafana.net/public-dashboards/c0be1c061fef47eaa2dc37a4db5ce42a)
+* *Lưu ý:* Chọn biểu tượng tự động làm mới (Auto-refresh) hoặc nhấn Refresh ở góc trên bên phải trên Grafana Cloud để thấy số liệu cập nhật ngay lập tức sau khi gửi event.
 
 ### 📥 4.2. Gửi Event thủ công qua API:
 * **Method:** `POST`
