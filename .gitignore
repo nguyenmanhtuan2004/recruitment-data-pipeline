@@ -9,3 +9,7 @@ __pycache__/
 !TECHNICAL_DETAILS.md
 .docker/
 
+# Environment files
+.env
+.env.*
+

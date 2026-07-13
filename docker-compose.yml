@@ -45,21 +45,36 @@ services:
   # vì Spark được chạy trực tiếp ở chế độ local bên trong container etl-function-app, 
   # giúp tiết kiệm được hơn 1.5GB RAM trên máy chủ mà không ảnh hưởng tới code.
 
-  # --- VISUALIZATION ---
-  grafana:
-    image: grafana/grafana:latest
-    container_name: etl_grafana
-    ports:
-      - "3000:3000"
-    volumes:
-      - grafana_data:/var/lib/grafana
+  # --- VISUALIZATION (Grafana Local - Disabled to save memory) ---
+  # grafana:
+  #   image: grafana/grafana:latest
+  #   container_name: etl_grafana
+  #   ports:
+  #     - "3000:3000"
+  #   volumes:
+  #     - grafana_data:/var/lib/grafana
+  #   networks:
+  #     - etl_network
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
+  #     cassandra:
+  #       condition: service_healthy
+
+  # --- GRAFANA CLOUD PDC AGENT ---
+  pdc-agent:
+    image: grafana/pdc-agent:latest
+    container_name: etl_pdc_agent
+    restart: always
+    command:
+      - "-token"
+      - "${GRAFANA_PDC_TOKEN}"
+      - "-cluster"
+      - "prod-ap-southeast-1"
+      - "-gcloud-hosted-grafana-id"
+      - "1704427"
     networks:
       - etl_network
-    depends_on:
-      mysql:
-        condition: service_healthy
-      cassandra:
-        condition: service_healthy
 
   # --- AZURE STORAGE EMULATOR (Azurite) ---
   azurite:
@@ -122,4 +137,4 @@ networks:
 volumes:
   mysql_data:
   cassandra_data:
-  grafana_data:
+  # grafana_data:
