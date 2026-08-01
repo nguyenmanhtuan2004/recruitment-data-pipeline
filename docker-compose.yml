@@ -5,6 +5,7 @@ services:
   mysql:
     image: mysql:8.0
     container_name: etl_mysql
+    command: --skip-name-resolve --innodb-flush-log-at-trx-commit=2 --innodb-doublewrite=0 --innodb-buffer-pool-size=256M
     environment:
       MYSQL_ROOT_PASSWORD: "123"
       MYSQL_DATABASE: etl_database
@@ -26,7 +27,6 @@ services:
     environment:
       CASSANDRA_CLUSTER_NAME: "ETLCluster"
       CASSANDRA_AUTHENTICATOR: "PasswordAuthenticator"
-      # Giới hạn dung lượng Heap để tiết kiệm RAM trên Droplet $18
       MAX_HEAP_SIZE: "512M"
       HEAP_NEWSIZE: "100M"
     ports:
@@ -41,9 +41,46 @@ services:
       timeout: 10s
       retries: 5
 
-  # Ghi chú: Cụm spark-master và spark-worker độc lập đã được gỡ bỏ 
-  # vì Spark được chạy trực tiếp ở chế độ local bên trong container etl-function-app, 
-  # giúp tiết kiệm được hơn 1.5GB RAM trên máy chủ mà không ảnh hưởng tới code.
+  # --- MESSAGE BROKER (KAFKA KRAFT) ---
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: etl_kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://159.223.41.98:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://0.0.0.0:29092,CONTROLLER://0.0.0.0:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      # Cấu hình Cluster ID cho KRaft Mode
+      CLUSTER_ID: 'MkU3OEVBNTcwNTJENDM2Qk'
+      # Tiết kiệm bộ nhớ JVM cho Kafka
+      KAFKA_JVM_PERFORMANCE_OPTS: "-server -XX:MetaspaceSize=96m -XX:MaxMetaspaceSize=128m -XX:+UseG1GC"
+      KAFKA_HEAP_OPTS: "-Xms256M -Xmx256M"
+    networks:
+      - etl_network
+
+  # --- KAFKA TOPIC INITIALIZER ---
+  kafka-setup:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: etl_kafka_setup
+    depends_on:
+      - kafka
+    entrypoint: 
+      - "sh"
+      - "-c"
+      - "echo 'Waiting for Kafka...'; cub kafka-ready -b kafka:29092 1 30 && kafka-topics --bootstrap-server kafka:29092 --create --if-not-exists --topic recruitment-tracking --partitions 1 --replication-factor 1"
+    networks:
+      - etl_network
 
   # --- VISUALIZATION (Grafana Local - Disabled to save memory) ---
   # grafana:
@@ -58,8 +95,10 @@ services:
   #   depends_on:
   #     mysql:
   #       condition: service_healthy
-  #     cassandra:
-  #       condition: service_healthy
+  #   environment:
+  #     GF_AUTH_ANONYMOUS_ENABLED: "true"
+  #     GF_AUTH_ANONYMOUS_ORG_ROLE: "Viewer"
+  #     GF_AUTH_ANONYMOUS_ORG_NAME: "Main Org."
 
   # --- GRAFANA CLOUD PDC AGENT ---
   pdc-agent:
@@ -76,57 +115,50 @@ services:
     networks:
       - etl_network
 
-  # --- AZURE STORAGE EMULATOR (Azurite) ---
-  azurite:
-    image: mcr.microsoft.com/azure-storage/azurite
-    container_name: etl_azurite
-    command: azurite --blobHost 0.0.0.0 --queueHost 0.0.0.0 --tableHost 0.0.0.0
+  # --- API INGESTION SERVICE (FASTAPI) ---
+  etl-api-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: etl_api_service
     ports:
-      - "10000:10000"
-      - "10001:10001"
-      - "10002:10002"
+      - "8082:80"
+    depends_on:
+      - kafka
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+      KAFKA_TOPIC: "recruitment-tracking"
     networks:
       - etl_network
 
-  # --- ETL FUNCTION APP CONTAINER ---
-  etl-function-app:
+  # --- SPARK STREAMING WORKER ---
+  etl-streaming-worker:
     build:
       context: .
-      dockerfile: Dockerfile
-    container_name: etl_function_app
-    ports:
-      - "8082:80"
+      dockerfile: Dockerfile.worker
+    container_name: etl_streaming_worker
     depends_on:
       mysql:
         condition: service_healthy
       cassandra:
         condition: service_healthy
-      azurite:
+      kafka:
         condition: service_started
     environment:
-      # Kích hoạt chế độ Development để log đầy đủ thông tin ra console
-      AZURE_FUNCTIONS_ENVIRONMENT: Development
-      # Cho phép truy cập từ mọi origin (CORS) để tránh bị trình duyệt chặn khi chạy giao diện html từ nguồn khác
-      CORS_ALLOWED_ORIGINS: '["*"]'
-      CONTAINER_NAME: etl_function_app
-      AzureFunctionsWebHost__hostid: etl-app
-      # Kết nối Function App tới trình giả lập Azurite local
-      AzureWebJobsStorage: DefaultEndpointsProtocol=http;AccountName=devstoreaccount1;AccountKey=Eby8vdM02xNOcqFlqUwJPLlmEtlCDXJ1OUzFT50uSRZ6IFsuFq2UVErCz4I6tq/K1SZFPTOtr/KBHBeksoGMGw==;BlobEndpoint=http://azurite:10000/devstoreaccount1;QueueEndpoint=http://azurite:10001/devstoreaccount1;TableEndpoint=http://azurite:10002/devstoreaccount1;
-      
-      # Các cấu hình kết nối database trỏ thẳng tới tên các container trong mạng docker
-      CASSANDRA_HOST: cassandra
-      CASSANDRA_PORT: 9042
-      CASSANDRA_USER: cassandra
-      CASSANDRA_PASSWORD: cassandra
-      CASSANDRA_KEYSPACE: recruitment
-      CASSANDRA_TABLE: tracking
-      
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_USER: root
-      MYSQL_PASSWORD: 123
-      MYSQL_DATABASE: etl_database
-      MYSQL_TARGET_TABLE: events
+      KAFKA_BOOTSTRAP_SERVERS: "kafka:29092"
+      KAFKA_TOPIC: "recruitment-tracking"
+      CASSANDRA_HOST: "cassandra"
+      CASSANDRA_PORT: "9042"
+      CASSANDRA_USER: "cassandra"
+      CASSANDRA_PASSWORD: "cassandra"
+      CASSANDRA_KEYSPACE: "recruitment"
+      CASSANDRA_TABLE: "tracking"
+      MYSQL_HOST: "mysql"
+      MYSQL_PORT: "3306"
+      MYSQL_USER: "root"
+      MYSQL_PASSWORD: "123"
+      MYSQL_DATABASE: "etl_database"
+      MYSQL_TARGET_TABLE: "events"
     networks:
       - etl_network
 
