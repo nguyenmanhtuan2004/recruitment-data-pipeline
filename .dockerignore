@@ -8,3 +8,5 @@ __pycache__
 .vscode
 *.md
 generate_dummy_data.py
+.env
+.env.*
