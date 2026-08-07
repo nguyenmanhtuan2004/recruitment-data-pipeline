@@ -91,6 +91,22 @@ def get_job_metadata(spark_session):
             
     return job_metadata_df
 
+def execute_with_retry(write_func, target_name="Database", max_retries=3, initial_delay=2):
+    for attempt in range(1, max_retries + 1):
+        try:
+            write_func()
+            return
+        except Exception as e:
+            if attempt == max_retries:
+                logging.error(f"[Retry Failure] Đã thử {max_retries} lần nhưng gi {target_name} vẫn thất bại! Lỗi: {e}")
+                raise e
+
+            wait_seconds = initial_delay * (2** (attempt - 1))
+            logging.warning(
+                f"[Retry Attempt {attempt}/{max_retries}] Lỗi ghi {target_name} ({e})."
+                f"Đang thử lại sau {wait_seconds} giây..."
+            )
+            time.sleep(wait_seconds)
 
 # Hàm xử lý logic cho từng micro-batch nhận từ Kafka
 def process_batch(batch_df, batch_id):
@@ -108,11 +124,13 @@ def process_batch(batch_df, batch_id):
     raw_to_save = batch_df.select(
         'create_time', 'bid', 'campaign_id', 'custom_track', 'group_id', 'job_id', 'publisher_id', 'ts'
     )
-    raw_to_save.write \
-        .format("org.apache.spark.sql.cassandra") \
-        .options(table=CASSANDRA_TABLE, keyspace=CASSANDRA_KEYSPACE) \
-        .mode("append") \
-        .save()
+    def save_to_cassandra():
+        raw_to_save.write \
+            .format("org.apache.spark.sql.cassandra") \
+            .options(table=CASSANDRA_TABLE, keyspace=CASSANDRA_KEYSPACE) \
+            .mode("append") \
+            .save()
+    execute_with_retry(save_to_cassandra, target_name="Cassandra", max_retries=3, initial_delay=2)
     logging.info(f"Đã ghi log thô thành công vào Cassandra. (Thời gian: {time.time() - t_start:.3f}s)")
 
     # 2. Xử lý tổng hợp (Aggregation) & 3. Join với Metadata
@@ -182,16 +200,19 @@ def process_batch(batch_df, batch_id):
     
     # 4. Ghi đè/Nạp vào MySQL events table
     t_start = time.time()
-    final_output.coalesce(2).write.format("jdbc") \
-        .option("driver", MYSQL_DRIVER) \
-        .option("url", MYSQL_URL) \
-        .option("dbtable", MYSQL_TARGET_TABLE) \
-        .mode("append") \
-        .option("user", MYSQL_USER) \
-        .option("password", MYSQL_PASSWORD) \
-        .option("batchsize", "5000") \
-        .option("isolationLevel", "NONE") \
-        .save()
+    def save_to_mysql():
+        final_output.coalesce(2).write.format("jdbc") \
+            .option("driver", MYSQL_DRIVER) \
+            .option("url", MYSQL_URL) \
+            .option("dbtable", MYSQL_TARGET_TABLE) \
+            .mode("append") \
+            .option("user", MYSQL_USER) \
+            .option("password", MYSQL_PASSWORD) \
+            .option("batchsize", "5000") \
+            .option("isolationLevel", "NONE") \
+            .save()
+    execute_with_retry(save_to_mysql, target_name="MySQL", max_retries=3, initial_delay=2)
+
     logging.info(f"Đã nạp số liệu tổng hợp thời gian thực thành công vào MySQL. (Thời gian: {time.time() - t_start:.3f}s)")
     
     logging.info(f"=== Kết thúc Micro-batch {batch_id} - Tổng thời gian xử lý: {time.time() - start_time:.3f}s ===")

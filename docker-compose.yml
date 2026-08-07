@@ -137,6 +137,7 @@ services:
       context: .
       dockerfile: Dockerfile.worker
     container_name: etl_streaming_worker
+    restart: always
     depends_on:
       mysql:
         condition: service_healthy

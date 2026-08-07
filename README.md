@@ -86,14 +86,22 @@ flowchart TD
 
 ## 5. Kết Quả Kiểm Thử Chịu Tải (Load Testing Benchmark)
 
-Khả năng chịu tải của tầng Ingestion API (`POST /api/track`) được kiểm thử bằng script chuyên dụng (`src/benchmark_load_test.py`):
+Khả năng chịu tải của tầng Ingestion API (`POST /api/track`) được kiểm thử bằng script chuyên dụng ([src/benchmark_load_test.py](file:///e:/DataEngineer/DE/Class4/Data_pipeline_for_recruitment_start_up/src/benchmark_load_test.py)):
 
 * **Engine:** Python `asyncio` + `aiohttp` concurrent worker pool.
-* **Throughput (Xử lý thực tế):** ~156 Clicks/sec (RPS) trên 1 node server cloud.
-* **Tỷ lệ thành công:** 99.46% (3,528/3,547 request thành công dưới tải 100 concurrent workers).
-* **Độ trễ phản hồi (Latency):**
-  * P50 (Median): 436 ms
-  * P95: 1,274 ms
+* **Môi trường:** 1 Single-Node Cloud Server (`159.223.41.98:8082`).
+
+| Mức Tải (Concurrency) | Thời Gian (Duration) | Tổng Requests | Tỷ Lệ Thành Công | Throughput (RPS) | Latency P50 | Latency P95 | Đánh Giá Trạng Thái |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **100 Workers** | 15s | 3,547 | **99.46%** | **~156 Clicks/s** | 436 ms | 1,274 ms | Tải ổn định, phản hồi nhanh |
+| **200 Workers** | 30s | 3,880 | **100.00%** | **~122.8 Clicks/s** | 1,353 ms | 3,032 ms | Tải cao, 0% lỗi nhưng bắt đầu trễ hàng chờ |
+| **500 Workers** | 30s | 4,438 | **83.44%** | **~111.4 Clicks/s** | 3,307 ms | 5,357 ms | **Chạm điểm gãy (Break-point)**, 16.56% timeout (>5s) |
+
+> [!IMPORTANT]
+> **Phân tích nguyên nhân điểm gãy ở 500 Concurrency:**
+> 1. **Tranh chấp tài nguyên Single-Node:** Chạy chung tất cả 6 container (FastAPI, Kafka, PySpark Worker JVM, Cassandra JVM, MySQL, Grafana Agent) trên cùng 1 Cloud VPS RAM/CPU giới hạn gây ra hiện tượng nghẽn CPU & RAM khi Spark thực hiện tính toán stream.
+> 2. **Queueing Delay & Client Timeout:** Ở 500 workers đồng thời, Uvicorn connection queue bị quá tải kéo độ trễ P95 lên `5,357 ms`. Do script benchmark đặt `timeout=5s`, có 735 requests bị ngắt kết nối trước khi server kịp trả lời.
+> 3. **Khuyến nghị Production:** Tách biệt Ingestion Layer (FastAPI + Kafka) ở một Server riêng khỏi Processing Layer (PySpark + Cassandra + MySQL) để đảm bảo tốc độ phản hồi API luôn đạt < 50ms bất kể tải Spark.
 
 ---
 
