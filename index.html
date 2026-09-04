@@ -1077,14 +1077,14 @@
         <div class="slide-title-area">
           <div class="slide-badge">Dự Án Data Engineering</div>
         </div>
-        <div class="slide-subtitle">Trình bày báo cáo dự án | Thời lượng: 1.5 Phút</div>
+        <div class="slide-subtitle">Báo cáo dự án Real-time Streaming Pipeline | Thời lượng: 1.5 Phút</div>
       </div>
       
       <div class="slide-content">
         <div class="welcome-left">
-          <h1 class="welcome-title">ETL Pipeline<br><span class="gradient-text">Recruitment Marketing</span></h1>
+          <h1 class="welcome-title">Real-time Streaming Pipeline<br><span class="gradient-text">Recruitment Marketing</span></h1>
           <p class="welcome-desc">
-            Xây dựng hệ thống tự động hóa xử lý và trực quan hóa dữ liệu tương tác quảng cáo tin tuyển dụng thời gian thực sử dụng PySpark, Cassandra và MySQL.
+            Xây dựng hệ thống Data Pipeline xử lý luồng sự kiện tương tác ứng viên (Clickstream) theo kiến trúc <b>Event-Driven</b> thời gian thực sử dụng <b>FastAPI, Apache Kafka (KRaft), Apache Cassandra, PySpark Structured Streaming, MySQL và Grafana</b>.
           </p>
         </div>
       </div>
@@ -1108,33 +1108,33 @@
         <div class="problem-box">
           <div class="problem-header">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            <h3>Tình trạng dữ liệu thô (Cassandra Log)</h3>
+            <h3>Hạn chế của kiến trúc cũ (Batch & Direct Query)</h3>
           </div>
           <ul class="problem-points">
-            <li>Dữ liệu tương tác ứng viên (click, apply...) lưu dạng log thô trong Cassandra.</li>
-            <li>Dữ liệu phi cấu trúc, khối lượng lớn, truy vấn trực tiếp chậm và gây quá tải.</li>
-            <li>Chưa liên kết được với thông tin chi tiết (metadata) của job/campaign.</li>
+            <li><b>Độ trễ báo cáo cao:</b> Dữ liệu tương tác xử lý theo lô (Batch) gây chậm trễ từ vài giờ đến cả ngày.</li>
+            <li><b>Lãng phí ngân sách quảng cáo:</b> Tiếp tục đốt tiền chạy quảng cáo cho tin tuyển dụng đã thu đủ CV.</li>
+            <li><b>Nghẽn tải cơ sở dữ liệu:</b> Truy vấn báo cáo trực tiếp gây quá tải hệ thống vận hành chính.</li>
           </ul>
-          <div class="slide-subtitle" style="color: #f87171;">Hệ quả: Các quyết định tối ưu ngân sách quảng cáo cảm tính, thiếu cơ sở dữ liệu.</div>
+          <div class="slide-subtitle" style="color: #f87171;">Hệ quả: Các quyết định phân bổ ngân sách marketing tuyển dụng cảm tính, thiếu số liệu tức thời.</div>
         </div>
 
         <div class="target-box">
           <div class="target-header">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-            <h3>Yêu cầu Nghiệp vụ (Task)</h3>
+            <h3>Yêu cầu Nâng cấp Streaming (Task)</h3>
           </div>
           <ul class="target-points">
-            <li>Đo lường chính xác hiệu suất tuyển dụng của từng Job và Campaign.</li>
-            <li>Xếp hạng hiệu quả chuyển đổi thực tế từ các nguồn quảng cáo (Publishers).</li>
-            <li>Cập nhật báo cáo tự động (Near Real-time) trực quan hóa trên Dashboard.</li>
+            <li><b>Tiếp nhận sự kiện siêu tốc:</b> Ingestion API (FastAPI) phản hồi trong <b>2ms</b>, đệm qua Kafka Broker.</li>
+            <li><b>Xử lý luồng thời gian thực:</b> PySpark Structured Streaming tổng hợp KPI với độ trễ chỉ <b>~7 giây</b>.</li>
+            <li><b>Lưu trữ phân tầng:</b> Lưu Raw Log vào Cassandra (Data Lake - Audit & Replay), KPI vào MySQL (Serving BI) & hiển thị Grafana.</li>
           </ul>
-          <div class="slide-subtitle" style="color: #4ade80;">Mục tiêu: Đưa ra quyết định chi tiêu ngân sách quảng cáo tối ưu dựa trên dữ liệu thực.</div>
+          <div class="slide-subtitle" style="color: #4ade80;">Mục tiêu: Đo lường chi phí (Spend) & tỷ lệ chuyển đổi tức thì, tối ưu chi tiêu quảng cáo 100%.</div>
         </div>
       </div>
       
       <div class="slide-footer">
         <div>Khung STAR - Thuyết trình Slide 2 / 6</div>
-        <div>Hệ thống ETL Recruitment Marketing</div>
+        <div>Hệ thống Real-time Recruitment Marketing</div>
       </div>
     </div>
 
@@ -1144,53 +1144,53 @@
         <div class="slide-title-area" style="flex-direction: column; align-items: flex-start; gap: 4px; width: 100%;">
           <div style="display: flex; align-items: center; gap: 15px;">
             <div class="slide-badge">A - Action (Hành động)</div>
-            <h2 class="slide-title">Kiến Trúc ETL 3 Bước</h2>
+            <h2 class="slide-title">Kiến Trúc Streaming Pipeline 3 Tầng</h2>
           </div>
-          <div class="slide-subtitle">Triển khai trên Docker (giả lập Azure Functions & Databases) | Tự động kích hoạt mỗi 3 phút</div>
+          <div class="slide-subtitle">Event-Driven Architecture | FastAPI (2ms) ➔ Kafka KRaft ➔ PySpark Structured Streaming ➔ Cassandra / MySQL ➔ Grafana</div>
         </div>
       </div>
       
       <div class="slide-content" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
-        <!-- Column 1: Extract -->
+        <!-- Column 1: Ingestion -->
         <div class="outcome-card" style="padding: 24px; justify-content: flex-start; text-align: left; align-items: flex-start;">
-          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">📥</div>
-          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--primary); margin-bottom: 4px;">1. EXTRACT</h3>
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">Incremental Load</div>
+          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">⚡</div>
+          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--primary); margin-bottom: 4px;">1. INGESTION</h3>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">FastAPI & Apache Kafka</div>
           <p class="outcome-desc" style="font-size: 0.82rem; line-height: 1.5; text-align: left; margin: 0;">
-            • Điều phối: <b>Azure Function</b> (mỗi 3 phút).<br>
-            • Cơ chế: <b>Incremental (CDC)</b> qua mốc <code>updated_at</code>.<br>
-            • Tối ưu: Chỉ quét bản ghi mới từ <b>Cassandra</b>, tránh quét toàn bảng.
+            • Tiếp nhận: <b>FastAPI</b> (<code>POST /api/track</code>) xử lý bất đồng bộ trong <b>2ms</b>.<br>
+            • Hàng đợi: <b>Apache Kafka</b> (KRaft Mode, Topic <code>recruitment-tracking</code>).<br>
+            • Đệm tải: Khả năng tiếp nhận đạt <b>~156 Clicks/s</b>, chống shock tải khi traffic tăng vọt.
           </p>
         </div>
 
-        <!-- Column 2: Transform -->
+        <!-- Column 2: Stream Processing -->
         <div class="outcome-card purple" style="padding: 24px; justify-content: flex-start; text-align: left; align-items: flex-start;">
           <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">⚙️</div>
-          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--secondary); margin-bottom: 4px;">2. TRANSFORM</h3>
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">PySpark Aggregation</div>
+          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--secondary); margin-bottom: 4px;">2. STREAMING</h3>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">PySpark Structured Streaming</div>
           <p class="outcome-desc" style="font-size: 0.82rem; line-height: 1.5; text-align: left; margin: 0;">
-            • Xử lý: Phân tích và tính toán song song clicks, conversions, qualified, unqualified.<br>
-            • Gom nhóm (<b>Aggregation</b>) đa chiều theo giờ.<br>
-            • Làm giàu dữ liệu (<b>Left Join</b>) với siêu dữ liệu Job trong MySQL.
+            • Xử lý: Lắng nghe Kafka Stream, tự động phân giải JSON theo Schema định sẵn.<br>
+            • <b>Stream-to-Static Join</b>: Ghép nối với bảng <code>job</code> trong MySQL lấy <code>company_id</code>.<br>
+            • <b>Aggregation</b>: Gom nhóm đa chiều tính Clicks, Conversions, Qualified CVs, Spend.
           </p>
         </div>
 
-        <!-- Column 3: Load -->
+        <!-- Column 3: Storage & BI -->
         <div class="outcome-card green" style="padding: 24px; justify-content: flex-start; text-align: left; align-items: flex-start;">
-          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">📤</div>
-          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--accent); margin-bottom: 4px;">3. LOAD</h3>
-          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">MySQL & Grafana</div>
+          <div class="outcome-icon" style="margin-bottom: 12px; width: 50px; height: 50px; border-radius: 12px; font-size: 1.5rem;">📊</div>
+          <h3 class="outcome-title" style="font-size: 1.25rem; color: var(--accent); margin-bottom: 4px;">3. SINK & BI</h3>
+          <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; margin-bottom: 12px; letter-spacing: 0.05em;">Cassandra, MySQL & Grafana</div>
           <p class="outcome-desc" style="font-size: 0.82rem; line-height: 1.5; text-align: left; margin: 0;">
-            • Ghi nhận: Nạp dữ liệu vào MySQL <code>events</code> qua <b>Spark JDBC</b>.<br>
-            • Chế độ: <b>Append</b> hiệu năng cao để ghi nhận liên tục.<br>
-            • Báo cáo: <b>Grafana</b> liên tục truy vấn MySQL để hiển thị trực quan.
+            • <b>Data Lake</b>: Ghi Raw Log vào <b>Cassandra</b> phục vụ lưu trữ vĩnh viễn & Audit.<br>
+            • <b>Data Warehouse</b>: Nạp số liệu tổng hợp vào MySQL <code>events</code> (Spark JDBC).<br>
+            • <b>Trực quan hóa</b>: <b>Grafana</b> cập nhật tức thời với độ trễ toàn luồng <b>~7 giây</b>.
           </p>
         </div>
       </div>
       
       <div class="slide-footer">
         <div>Khung STAR - Thuyết trình Slide 3 / 6</div>
-        <div>Xử lý phân tán song song PySpark</div>
+        <div>Kiến trúc xử lý luồng sự kiện phân tán PySpark & Kafka</div>
       </div>
     </div>
 
@@ -1199,15 +1199,31 @@
       <div class="slide-header">
         <div class="slide-title-area">
           <div class="slide-badge">Luồng dữ liệu (Input & Output)</div>
-          <h2 class="slide-title">Cấu Trúc Các Bảng Dữ Liệu</h2>
+          <h2 class="slide-title">Cấu Trúc Schema & Lưu Trữ Phân Tầng</h2>
         </div>
       </div>
       
       <div class="slide-content">
-        <div class="schema-left">
-          <div class="schema-btn active" onclick="switchSchema('cassandra')">
+        <div class="schema-left" style="gap: 10px;">
+          <div class="schema-btn active" onclick="switchSchema('kafka')" style="padding: 10px 14px;">
+            <div class="schema-btn-icon" style="background: #231F20 !important; color: white !important; padding: 6px;">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="18" cy="5" r="3"></circle>
+                <circle cx="6" cy="12" r="3"></circle>
+                <circle cx="18" cy="19" r="3"></circle>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+              </svg>
+            </div>
+            <div>
+              <div class="schema-btn-title">Kafka Stream Event</div>
+              <div class="schema-btn-desc">recruitment-tracking (Ingestion Payload)</div>
+            </div>
+          </div>
+
+          <div class="schema-btn" onclick="switchSchema('cassandra')" style="padding: 10px 14px;">
             <div class="schema-btn-icon" style="background: #1287B1 !important; color: white !important; padding: 6px;">
-              <svg width="24" height="24" viewBox="0 0 120 120" style="display: block; width: 100%; height: 100%;">
+              <svg width="22" height="22" viewBox="0 0 120 120" style="display: block; width: 100%; height: 100%;">
                 <path d="M10 60C10 60 30 25 60 25C90 25 110 60 110 60C110 60 90 95 60 95C30 95 10 60 10 60Z" fill="#ffffff"/>
                 <circle cx="60" cy="60" r="22" fill="#1287B1"/>
                 <circle cx="60" cy="60" r="11" fill="#ffffff"/>
@@ -1215,21 +1231,21 @@
               </svg>
             </div>
             <div>
-              <div class="schema-btn-title">Cassandra Source Table</div>
-              <div class="schema-btn-desc">recruitment.tracking (Input Log)</div>
+              <div class="schema-btn-title">Cassandra Data Lake</div>
+              <div class="schema-btn-desc">recruitment.tracking (Raw Log Table)</div>
             </div>
           </div>
           
-          <div class="schema-btn" onclick="switchSchema('mysql_events')">
+          <div class="schema-btn" onclick="switchSchema('mysql_events')" style="padding: 10px 14px;">
             <div class="schema-btn-icon" style="background: #00758F !important; color: white !important; padding: 6px;">
-              <svg width="24" height="24" viewBox="0 0 120 120" style="display: block; width: 100%; height: 100%;">
+              <svg width="22" height="22" viewBox="0 0 120 120" style="display: block; width: 100%; height: 100%;">
                 <path d="M85 25C70 20 52 28 45 38C38 48 35 60 40 72C42 76 39 82 32 85C48 88 58 80 62 74C78 72 88 58 90 45C92 32 90 26 85 25Z" fill="#F29111"/>
                 <path d="M78 20C65 15 48 22 42 32C35 42 32 55 38 68C22 72 15 85 10 95C28 92 38 82 42 76C58 74 72 60 75 45C78 30 82 22 78 20Z" fill="#ffffff"/>
               </svg>
             </div>
             <div>
-              <div class="schema-btn-title">MySQL Destination Table</div>
-              <div class="schema-btn-desc">events (Aggregated Output)</div>
+              <div class="schema-btn-title">MySQL Data Warehouse</div>
+              <div class="schema-btn-desc">events (Real-time Aggregated KPIs)</div>
             </div>
           </div>
         </div>
@@ -1254,7 +1270,7 @@
       
       <div class="slide-footer">
         <div>Khung STAR - Thuyết trình Slide 4 / 6</div>
-        <div>Cấu trúc dữ liệu Hệ thống ETL</div>
+        <div>Cấu trúc dữ liệu Hệ thống Streaming</div>
       </div>
     </div>
 
@@ -1267,7 +1283,7 @@
             <h2 class="slide-title">Bảng Dashboard Trực Quan Hóa Thực Tế</h2>
           </div>
           <div class="slide-subtitle" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 4px;">
-            <span>Trực quan hóa thời gian thực (Near Real-time) trên Grafana — ảnh chụp từ hệ thống thực tế</span>
+            <span>Trực quan hóa thời gian thực (End-to-End Latency ~7s) trên Grafana — ảnh chụp từ hệ thống thực tế</span>
             <a href="https://loyallagoon578.grafana.net/public-dashboards/c0be1c061fef47eaa2dc37a4db5ce42a" target="_blank" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--primary); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 0.78rem; transition: var(--transition); box-shadow: 0 4px 10px rgba(79, 70, 229, 0.2); cursor: pointer;">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="display: block;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
               Xem Dashboard Live Cloud
@@ -1302,31 +1318,31 @@
       <div class="slide-content" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
         <div class="outcome-card">
           <div class="outcome-icon">⏱️</div>
-          <h3 class="outcome-title">Báo Cáo Tức Thì</h3>
-          <p class="outcome-desc">Thời gian cập nhật dữ liệu báo cáo giảm từ hàng ngày xuống chỉ còn 3 phút. Dashboard hiển thị nhanh chỉ trong 2 giây.</p>
+          <h3 class="outcome-title">Độ Trễ Xử Lý ~7 Giây</h3>
+          <p class="outcome-desc">Tiếp nhận Ingestion API cực nhanh (2ms), độ trễ toàn luồng từ Click đến Dashboard chỉ mất ~7 giây, thay thế chu kỳ Batch hàng ngày.</p>
         </div>
         
         <div class="outcome-card purple">
           <div class="outcome-icon">🎯</div>
-          <h3 class="outcome-title">Tối Ưu Ngân Sách</h3>
-          <p class="outcome-desc">Phân tích rõ rệt tỷ lệ chuyển đổi hiệu quả của từng tin tuyển dụng, giúp dừng hoặc tăng ngân sách kịp thời.</p>
+          <h3 class="outcome-title">Tối Ưu Ngân Sách Tức Thì</h3>
+          <p class="outcome-desc">Đo lường chính xác chi phí (Spend = Clicks × Bid) và tỷ lệ chuyển đổi, tự động dừng ngân sách ngay khi tin đạt đủ CV đạt chuẩn.</p>
         </div>
         
         <div class="outcome-card green">
-          <div class="outcome-icon">📈</div>
-          <h3 class="outcome-title">Đánh Giá Kênh</h3>
-          <p class="outcome-desc">Xếp hạng chính xác chất lượng ứng viên từ các nguồn cung cấp (Publishers), loại bỏ các kênh ảo thiếu hiệu quả.</p>
+          <div class="outcome-icon">🚀</div>
+          <h3 class="outcome-title">Khả Năng Chịu Tải Cao</h3>
+          <p class="outcome-desc">Throughput đạt ~156 Clicks/s (Load test 100 workers). Tách biệt hoàn toàn Data Lake (Cassandra) & Data Warehouse (MySQL), bảo vệ DB chính.</p>
         </div>
       </div>
       
       <div class="slide-footer">
         <div>Khung STAR - Thuyết trình Slide 6 / 6</div>
-        <div>Hoàn thành mục tiêu Data Pipeline</div>
+        <div>Hoàn thành mục tiêu Real-time Data Pipeline</div>
       </div>
     </div>
 
-    <!-- SLIDE 7: INTERACTIVE INGESTION & ETL CONTROLLER -->
-    <div class="slide" id="slide-7">
+    <!-- SLIDE 7: INTERACTIVE INGESTION & ETL CONTROLLER (HIDDEN) -->
+    <div class="slide" id="slide-7" style="display: none !important;">
       <div class="slide-header">
         <div class="slide-title-area" style="flex-direction: column; align-items: flex-start; gap: 2px; width: 100%;">
           <div style="display: flex; align-items: center; gap: 12px;">
@@ -1458,7 +1474,7 @@
       <div id="progress-bar"></div>
     </div>
     
-    <div id="slide-indicator">Slide 1 / 7</div>
+    <div id="slide-indicator">Slide 1 / 6</div>
   </div>
 
   <div class="toast-container" id="toastContainer"></div>
@@ -1466,8 +1482,18 @@
   <script>
     /* SCHEMA DEFINITIONS DATA */
     const schemaData = {
+      kafka: [
+        { name: "create_time", type: "STRING (UUIDv1)", desc: "Mã định danh sự kiện duy nhất theo thời gian (FastAPI sinh trong 2ms)" },
+        { name: "custom_track", type: "STRING", desc: "Loại tương tác người dùng: 'click', 'conversion', 'qualified', 'unqualified'" },
+        { name: "job_id", type: "INTEGER", desc: "Mã tin tuyển dụng được người dùng tương tác" },
+        { name: "publisher_id", type: "INTEGER", desc: "Mã nhà phân phối / kênh quảng cáo (Facebook Ads, Google Jobs, TopCV...)" },
+        { name: "campaign_id", type: "INTEGER", desc: "Mã chiến dịch marketing tuyển dụng liên kết" },
+        { name: "group_id", type: "INTEGER (Nullable)", desc: "Mã nhóm tuyển dụng liên kết (nếu có)" },
+        { name: "bid", type: "DOUBLE", desc: "Đơn giá thầu quảng cáo tại thời điểm click ($)" },
+        { name: "ts", type: "STRING", desc: "Mốc thời gian tương tác (yyyy-MM-dd HH:mm:ss)" }
+      ],
       cassandra: [
-        { name: "create_time", type: "TEXT (UUIDv1)", desc: "Khóa chính tự sinh dạng TimeUUID để phân giải thời gian sự kiện" },
+        { name: "create_time", type: "TEXT (TimeUUID)", desc: "Khóa chính NoSQL lưu trữ toàn vẹn mọi bản ghi sự kiện thô (Data Lake)" },
         { name: "bid", type: "INT", desc: "Đơn giá thầu của tin tuyển dụng tại thời điểm tương tác" },
         { name: "campaign_id", type: "INT", desc: "Mã chiến dịch marketing liên kết" },
         { name: "custom_track", type: "TEXT", desc: "Loại tương tác của người dùng: 'click', 'conversion', 'qualified', 'unqualified'" },
@@ -1487,7 +1513,7 @@
         { name: "disqualified_application", type: "INT", desc: "Tổng số hồ sơ bị đánh giá không đạt tiêu chuẩn" },
         { name: "bid_set", type: "DECIMAL(10,2)", desc: "Đơn giá thầu trung bình trong khung giờ" },
         { name: "spend_hour", type: "DECIMAL(10,2)", desc: "Tổng chi phí tiêu tốn = Clicks * Bid_set" },
-        { name: "company_id", type: "INT", desc: "Mã công ty (được làm giàu qua Join bảng Job)" },
+        { name: "company_id", type: "INT", desc: "Mã công ty (được làm giàu qua Stream Join bảng Job)" },
         { name: "publisher_id", type: "INT", desc: "Mã nguồn tuyển dụng" },
         { name: "campaign_id", type: "INT", desc: "Mã chiến dịch quảng cáo" },
         { name: "updated_at", type: "TIMESTAMP", desc: "Mốc thời gian đồng bộ cuối cùng của loạt dữ liệu" }
@@ -1496,23 +1522,23 @@
 
     /* ARCHITECTURE DETAIL PANEL DATA */
     const archDetails = {
-      extract: {
-        title: "📥 Bước 1: Extract (Trích xuất gia tăng)",
-        text: "Sử dụng mốc thời gian đồng bộ lớn nhất (updated_at) trong MySQL làm ngưỡng lọc. PySpark trích xuất dữ liệu từ bảng nguồn Cassandra bằng cách áp dụng TimeUUID Pushdown Filter để chỉ tải lên dữ liệu mới, tránh quét toàn bộ bảng (CDC)."
+      ingestion: {
+        title: "⚡ Tầng 1: Ingestion (FastAPI & Kafka)",
+        text: "FastAPI tiếp nhận HTTP POST /api/track với độ trễ phản hồi chỉ 2ms, đóng gói payload JSON và đẩy bất đồng bộ vào Apache Kafka Topic 'recruitment-tracking' (KRaft Mode). Đóng vai trò hàng đợi bộ đệm chịu tải cao (~156 Clicks/s)."
       },
-      transform: {
-        title: "⚙️ Bước 2: Transform (Tổng hợp & Liên kết)",
-        text: "Sử dụng PySpark thực hiện làm sạch dữ liệu và tách các luồng để tính toán song song theo clicks, conversions, qualified, unqualified. Sau đó, gom nhóm (Group By) theo bộ khóa chung và thực hiện phép kết hợp (Left Join) với bảng Job trong MySQL để gán company_id tương ứng."
+      streaming: {
+        title: "⚙️ Tầng 2: Stream Processing (PySpark)",
+        text: "PySpark Structured Streaming đăng ký lắng nghe Kafka Stream, parse JSON theo Schema tự động, thực hiện Stream-to-Static Left Join với bảng Job trong MySQL để lấy company_id, sau đó tổng hợp đa chiều (Aggregation) theo Clicks, Conversions, Qualified, Spend."
       },
-      load: {
-        title: "📤 Bước 3: Load (Nạp dữ liệu & Trực quan)",
-        text: "Sử dụng Spark JDBC kết nối trực tiếp đến MySQL ở chế độ 'append' để ghi nhận dữ liệu đã được làm giàu vào bảng 'events'. Grafana Dashboard sẽ truy vấn liên tục bảng MySQL này để cập nhật trực quan hóa thời gian thực (Near Real-time)."
+      sink: {
+        title: "📊 Tầng 3: Storage & BI (Cassandra, MySQL & Grafana)",
+        text: "Mô hình Dual-Sink: Ghi nhận Raw Log đầy đủ vào Apache Cassandra (Data Lake) phục vụ lưu trữ & Audit; Nạp chỉ số tổng hợp vào MySQL 'events' (Data Warehouse) qua Spark JDBC. Grafana kết nối trực tiếp MySQL hiển thị Dashboard thời gian thực với độ trễ toàn luồng ~7 giây."
       }
     };
 
     /* STATE VARIABLES */
     let currentSlideIndex = 1;
-    const totalSlides = 7;
+    const totalSlides = 6;
 
     /* KEYBOARD & SCROLL HANDLERS */
     document.addEventListener("keydown", (e) => {
@@ -1672,11 +1698,7 @@
 
     // Initialize Schema View & Controller setup on load
     window.addEventListener("DOMContentLoaded", () => {
-      switchSchema("cassandra");
-      // Pre-warm details panel if it exists
-      if (document.getElementById("arch-desc-panel")) {
-        showArchDetails("extract");
-      }
+      switchSchema("kafka");
     });
 
     /* ========================================================
@@ -1706,7 +1728,7 @@
     });
 
     // Auto-detect and configure default API URL
-    let defaultHost = 'http://159.223.41.98:8082'; // Default to Production Server IP
+    let defaultHost = 'http://localhost:8082'; // Default to Localhost Ingestion API
     
     // Only use current host/origin if the page is loaded directly from the container's UI endpoint
     if (window.location.port === '8082' || window.location.pathname.includes('/api/')) {

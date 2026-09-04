@@ -41,33 +41,33 @@ Nền tảng tuyển dụng hoạt động theo mô hình chạy quảng cáo b�
 ### Sơ đồ kiến trúc (Architecture Flowchart)
 ```mermaid
 flowchart TD
-    subgraph Web_Client [Website Tuyển Dụng]
+    subgraph Web_Client ["Website Tuyển Dụng"]
         UserInteract["Hành vi người dùng: Click, Apply, Qualify..."]
     end
 
-    subgraph Ingestion_Layer [Tầng Tiếp Nhận]
+    subgraph Ingestion_Layer ["Tầng Tiếp Nhận"]
         FastAPI["FastAPI Ingestion API (app.py)"]
         KafkaBroker[("Apache Kafka (KRaft Mode)")]
-        UserInteract -->|HTTP POST /api/track| FastAPI
-        FastAPI -->|Publish Events| KafkaBroker
+        UserInteract -->|"HTTP POST /api/track"| FastAPI
+        FastAPI -->|"Publish Events"| KafkaBroker
     end
 
-    subgraph Processing_Layer [Tầng Xử Xý Luồng]
+    subgraph Processing_Layer ["Tầng Xử Lý Luồng"]
         SparkStreaming[["PySpark Structured Streaming (streaming_pipeline.py)"]]
-        KafkaBroker -->|Subscribe Stream| SparkStreaming
+        KafkaBroker -->|"Subscribe Stream"| SparkStreaming
     end
 
-    subgraph Storage_Layer [Tầng Lưu Trữ]
-        Cassandra[("Apache Cassandra (Data Lake)")]
+    subgraph Storage_Layer ["Tầng Lưu Trữ & Phân Tầng"]
+        Cassandra[("Apache Cassandra (Raw Data Lake)")]
         MySQL[("MySQL (Data Warehouse)")]
-        SparkStreaming -->|1. Lưu Log Thô| Cassandra
-        SparkStreaming -->|2. Tra Cứu Job Metadata| MySQL
-        SparkStreaming -->|3. Nạp Chỉ Số Tổng Hợp| MySQL
+        SparkStreaming -->|"1. Lưu Raw Data Lake (Audit & Replay)"| Cassandra
+        SparkStreaming -->|"2. Tra Cứu Job Metadata"| MySQL
+        SparkStreaming -->|"3. Nạp Chỉ Số Tổng Hợp (Serving BI)"| MySQL
     end
 
-    subgraph Visualization_Layer [Trực Quan Hóa]
+    subgraph Visualization_Layer ["Trực Quan Hóa"]
         Grafana["Grafana Dashboard"]
-        MySQL -->|Truy Vấn KPI Real-time| Grafana
+        MySQL -->|"Truy Vấn KPI Real-time"| Grafana
     end
 ```
 
@@ -76,10 +76,10 @@ flowchart TD
 2. **Event Broker (Kafka KRaft):** Đóng vai trò hàng đợi sự kiện, lưu trữ tạm thời và đảm bảo thứ tự thời gian của luồng sự kiện.
 3. **Real-time Processing (PySpark Structured Streaming):**
    * Đăng ký lắng nghe Kafka Stream, tự động phân giải JSON từ byte nhị phân dựa trên Schema định sẵn.
-   * **Write to Data Lake:** Ghi trực tiếp log thô vào **Cassandra** phục vụ phân tích chuyên sâu.
+   * **Write to Data Lake (Cassandra):** Lưu trữ 100% bản ghi sự kiện thô nguyên bản (Granular Log) phục vụ kiểm toán đối soát tài chính (Billing Audit), phát hiện gian lận click (Fraud Detection) và Replay dữ liệu khi cần tái tính toán.
    * **Stream-to-Static Join:** Ghép nối dữ liệu stream với bảng dữ liệu tĩnh `job` trong **MySQL** để lấy mã công ty (`company_id`).
-   * **Aggregation:** Tổng hợp chỉ số (Clicks, Conversions, Qualified/Unqualified, Spend) theo giờ và theo ngày.
-   * **Write to Data Warehouse:** Ghi đè cập nhật số liệu trực tiếp vào bảng `events` của **MySQL**.
+   * **Aggregation:** Gom nhóm tính toán chỉ số KPI (Clicks, Conversions, Qualified/Unqualified, Spend) theo giờ và theo ngày.
+   * **Write to Data Warehouse (MySQL):** Nạp dữ liệu tổng hợp vào bảng `events` của **MySQL** làm lớp Serving Layer cho Grafana truy vấn tức thời.
 4. **Dashboard (Grafana):** Kết nối trực tiếp vào MySQL hiển thị đồ thị tương tác thời gian thực với tổng độ trễ luồng ~7 giây.
 
 ---
@@ -89,7 +89,7 @@ flowchart TD
 Khả năng chịu tải của tầng Ingestion API (`POST /api/track`) được kiểm thử bằng script chuyên dụng ([src/benchmark_load_test.py](file:///e:/DataEngineer/DE/Class4/Data_pipeline_for_recruitment_start_up/src/benchmark_load_test.py)):
 
 * **Engine:** Python `asyncio` + `aiohttp` concurrent worker pool.
-* **Môi trường:** 1 Single-Node Cloud Server (`159.223.41.98:8082`).
+* **Môi trường:** 1 Single-Node Server (Docker Sandbox).
 
 | Mức Tải (Concurrency) | Thời Gian (Duration) | Tổng Requests | Tỷ Lệ Thành Công | Throughput (RPS) | Latency P50 | Latency P95 | Đánh Giá Trạng Thái |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
@@ -147,11 +147,7 @@ docker logs -f etl_streaming_worker
 
 ---
 
-## 7. Môi Trường Cloud & API Endpoints
+## 7. Trực Quan Hóa & Giám Sát
 
 ### Grafana Live Dashboard:
 * **URL Trực Quan:** [Grafana Live Dashboard](https://loyallagoon578.grafana.net/public-dashboards/c0be1c061fef47eaa2dc37a4db5ce42a)
-
-### API Endpoints:
-* **Tracking API:** `POST http://159.223.41.98:8082/api/track` (hoặc `http://localhost:8082/api/track`)
-* **Interactive UI:** `http://159.223.41.98:8082/api/ui` (hoặc `http://localhost:8082/api/ui`)
